@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Winner_Team__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Winner Team</label>
+    <lookupFilter>
+        <active>true</active>
+        <booleanFilter>1 OR 2</booleanFilter>
+        <filterItems>
+            <field>Team__c.Id</field>
+            <operation>equals</operation>
+            <valueField>$Source.Home_Team__c</valueField>
+        </filterItems>
+        <filterItems>
+            <field>Team__c.Id</field>
+            <operation>equals</operation>
+            <valueField>$Source.Away_Team__c</valueField>
+        </filterItems>
+        <isOptional>false</isOptional>
+    </lookupFilter>
+    <referenceTo>Team__c</referenceTo>
+    <relationshipLabel>Matches (Winner Team)</relationshipLabel>
+    <relationshipName>Matches_Won</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

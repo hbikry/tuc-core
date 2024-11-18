@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Check_Draw_On_Knockout_Stage_Match</fullName>
+    <active>true</active>
+    <errorConditionFormula>AND(
+    CONTAINS(TEXT(Stage__c), &quot;Knockout Stage&quot;),
+    Draw__c
+)</errorConditionFormula>
+    <errorDisplayField>Draw__c</errorDisplayField>
+    <errorMessage>Knockout stage matches cannot be concluded with a draw.</errorMessage>
+</ValidationRule>

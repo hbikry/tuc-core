@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Check_Winner_Team_on_KO_Stage_Matches</fullName>
+    <active>true</active>
+    <errorConditionFormula>AND(
+   CONTAINS(TEXT(Stage__c), &quot;Knockout Stage&quot;),
+   Home_Team_Goals__c =  Away_Team_Goals__c,
+   ISNULL( Winner_Team__c ) 
+)</errorConditionFormula>
+    <errorMessage>A winner team should be selected.</errorMessage>
+</ValidationRule>
