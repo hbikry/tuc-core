@@ -19,8 +19,8 @@
         <name>CustomApplication</name>
     </types>
     <types>
-        <members>Created_Tournament_Team</members>
-        <members>Created_Match</members>
+        <members>TourmanetTeam_Before_Create_Update</members>
+        <members>Match_Before_Create_Update</members>
         <name>Flow</name>
     </types>
     <types>
