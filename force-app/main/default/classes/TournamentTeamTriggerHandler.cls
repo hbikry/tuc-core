@@ -1,5 +1,13 @@
 public without sharing class TournamentTeamTriggerHandler extends TriggerHandler {
-  static final Integer MAX_TEAMS_PER_GROUP = 4;
+  private Map<Id, Tournament_Team__c> oldMap;
+  private List<Tournament_Team__c> newList;
+  private TournamentConfigurationUtility configUtility;
+
+  public TournamentTeamTriggerHandler() {
+    newList = (List<Tournament_Team__c>) Trigger.new;
+    oldMap = (Map<Id, Tournament_Team__c>) Trigger.oldMap;
+    configUtility = new TournamentConfigurationUtility();
+  }
 
   public override void beforeInsert() {
     validate();
@@ -9,15 +17,23 @@ public without sharing class TournamentTeamTriggerHandler extends TriggerHandler
     validate();
   }
 
-  private static void validate() {
-    // Set to related store tournament ids
+  private static Set<Id> getRelatedTournamendIds(
+    List<Tournament_Team__c> records
+  ) {
     Set<Id> tournamentIds = new Set<Id>();
 
     for (
-      Tournament_Team__c tournamentTeam : (List<Tournament_Team__c>) Trigger.new
+      Tournament_Team__c tournamentTeam : (List<Tournament_Team__c>) records
     ) {
       tournamentIds.add(tournamentTeam.Tournament__c);
     }
+
+    return tournamentIds;
+  }
+
+  private void validate() {
+    // Set to related store tournament ids
+    Set<Id> tournamentIds = getRelatedTournamendIds(this.newList);
 
     // Retrieve existing tournament-team records of related tournaments
     List<Tournament_Team__c> existingRecords = [
@@ -45,16 +61,16 @@ public without sharing class TournamentTeamTriggerHandler extends TriggerHandler
       tournamentTeamSet.add(uniqueKey(record));
     }
 
-    // Cast triggers old map to match object type
-    Map<Id, Tournament_Team__c> oldMap = (Map<Id, Tournament_Team__c>) Trigger.oldMap;
-
-    Integer maxTeamsPerGroup = TournamentConfigurationUtility.getDefaultMaxTeamsPerGroup();
-
-    for (Tournament_Team__c record : (List<Tournament_Team__c>) Trigger.new) {
-      // If updating, remove the old record from the group count map && remove the unique key from set
-      if (oldMap != null && oldMap.containsKey(record.Id)) {
-        removeRecordFromMap(oldMap.get(record.Id), tournamentGroupCountMap);
-        tournamentTeamSet.remove(uniqueKey(oldMap.get(record.Id)));
+    for (Tournament_Team__c record : (List<Tournament_Team__c>) this.newList) {
+      // If updating
+      if (this.oldMap != null && this.oldMap.containsKey(record.Id)) {
+        // remove the old record from the group count map
+        removeRecordFromMap(
+          this.oldMap.get(record.Id),
+          tournamentGroupCountMap
+        );
+        // remove the unique key from set
+        tournamentTeamSet.remove(uniqueKey(this.oldMap.get(record.Id)));
       }
 
       // Add the new record to the group count map
@@ -63,11 +79,11 @@ public without sharing class TournamentTeamTriggerHandler extends TriggerHandler
       // Check if the group has more than configured max number
       if (
         tournamentGroupCountMap.get(record.Tournament__c).get(record.Group__c) >
-        maxTeamsPerGroup
+        configUtility.getDefaultMaxTeamsPerGroup()
       ) {
         record.addError(
           'Each tournament group can only have up to ' +
-            maxTeamsPerGroup +
+            configUtility.getDefaultMaxTeamsPerGroup() +
             ' teams.'
         );
       }
