@@ -56,24 +56,53 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     ];
 
     Map<Id, Map<String, Datetime>> lastMatchDateByGroupMap = new Map<Id, Map<String, Datetime>>();
-
+    Map<Id, Map<String, Datetime>> lastMatchDateByStageMap = new Map<Id, Map<String, Datetime>>();
     Set<String> uniqueMatchesSet = new Set<String>();
 
     for (Match__c match : existingRecords) {
       MatchUtility.addRecordToLastMatchDateByGroupMap(
         match,
-        groupsByTeamMap,
+        groupsByTeamMap.get(match.Tournament__c).get(match.Home_Team__c),
         lastMatchDateByGroupMap
+      );
+      MatchUtility.addRecordToLastMatchDateByStageMap(
+        match,
+        lastMatchDateByStageMap
       );
       uniqueMatchesSet.add(MatchUtility.uniqueKey(match, true));
     }
 
     for (Match__c match : this.newList) {
-      if (MatchUtility.isDuplicateMatch(match, uniqueMatchesSet)) {
-        match.addError('Match between the two teams already exists');
-
-        continue;
+      // If updating
+      if (this.oldMap != null && this.oldMap.containsKey(match.Id)) {
+        Match__c oldRecord = this.oldMap.get(match.Id);
+        // remove the old record from the group count map
+        MatchUtility.removeRecordFromLastMatchDateByGroupMap(
+          oldRecord,
+          groupsByTeamMap.get(oldRecord.Tournament__c)
+            .get(oldRecord.Home_Team__c),
+          lastMatchDateByGroupMap
+        );
+        MatchUtility.removeRecordFromLastMatchDateByStageMap(
+          oldRecord,
+          lastMatchDateByStageMap
+        );
+        // remove the unique key from set
+        uniqueMatchesSet.remove(MatchUtility.uniqueKey(oldRecord, true));
       }
+
+      MatchUtility.addRecordToLastMatchDateByGroupMap(
+        match,
+        groupsByTeamMap.get(match.Tournament__c).get(match.Home_Team__c),
+        lastMatchDateByGroupMap
+      );
+      MatchUtility.addRecordToLastMatchDateByStageMap(
+        match,
+        lastMatchDateByStageMap
+      );
+
+      // Check for duplicate match
+      handleDuplicateMatch(match, uniqueMatchesSet);
 
       // Check if home team and away team are registered to the tournament
       handleUnregisteredTeams(match, groupsByTeamMap);
@@ -86,6 +115,8 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
 
       // Check if home and away team belong to the same group for group stage matches
       handleGroupConformityOnGroupStage(match, groupsByTeamMap);
+
+      handleMatchDate(match, lastMatchDateByStageMap);
 
       // Check match date on round 3 group stage
       handleLastMatchOnGroupStage(
@@ -100,6 +131,17 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
       // Calculate draw based on goals and stage
       calculateDraw(match);
     }
+  }
+
+  private void handleDuplicateMatch(
+    Match__c match,
+    Set<String> uniqueMatchesSet
+  ) {
+    if (MatchUtility.isDuplicateMatch(match, uniqueMatchesSet)) {
+      match.addError('Match between the two teams already exists');
+    }
+
+    uniqueMatchesSet.add(MatchUtility.uniqueKey(match, true));
   }
 
   private void handleUnregisteredTeams(
@@ -157,6 +199,38 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     ) {
       match.addError(
         'Home and Away Teams should be on the same group for group stage matches'
+      );
+    }
+  }
+
+  public static void handleMatchDate(
+    Match__c match,
+    Map<Id, Map<String, Datetime>> lastMatchDateByStageMap
+  ) {
+    String nextStage = StageUtility.nextStage(match.Stage__c);
+    String previousStage = StageUtility.previousStage(match.Stage__c);
+    Id tournamentId = match.Tournament__c;
+    Datetime matchDate = match.Date__c;
+
+    if (
+      nextStage != null &&
+      lastMatchDateByStageMap.get(tournamentId) != null &&
+      lastMatchDateByStageMap.get(tournamentId).get(nextStage) != null &&
+      matchDate >= lastMatchDateByStageMap.get(tournamentId).get(nextStage)
+    ) {
+      match.Date__c.addError(
+        'Match date cannot be greater than or equal to any of the next stage dates'
+      );
+    }
+
+    if (
+      previousStage != null &&
+      lastMatchDateByStageMap.get(tournamentId) != null &&
+      lastMatchDateByStageMap.get(tournamentId).get(previousStage) != null &&
+      matchDate <= lastMatchDateByStageMap.get(tournamentId).get(previousStage)
+    ) {
+      match.Date__c.addError(
+        'Match date cannot be lesser than or equal to any of the previous stage dates'
       );
     }
   }

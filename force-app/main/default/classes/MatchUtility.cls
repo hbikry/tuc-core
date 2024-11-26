@@ -2,26 +2,20 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 11-25-2024
+ * @last modified on  : 11-26-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class MatchUtility {
-  // NOTE: these values are part of the picklist field Stage__c of the Match__c object
-  // so they must be kept in sync with the picklist values
-  public final static String ROUND_3_GROUP_STAGE = 'Group Stage - Round 3';
-  public final static String GROUP_STAGE_PREFIX = 'Group Stage';
-  public final static String KNOCKOUT_STAGE_PREFIX = 'Knockout Stage';
-
   public static Boolean isKnockoutStageMatch(Match__c match) {
-    return match.Stage__c.contains(KNOCKOUT_STAGE_PREFIX);
+    return StageUtility.KO_STAGES.contains(match.Stage__c);
   }
 
   public static Boolean isGroupStageMatch(Match__c match) {
-    return match.Stage__c.contains(GROUP_STAGE_PREFIX);
+    return StageUtility.GROUP_STAGES.contains(match.Stage__c);
   }
 
   public static Boolean isGroupStageRoundThreeMatch(Match__c match) {
-    return match.Stage__c == ROUND_3_GROUP_STAGE;
+    return match.Stage__c == StageUtility.ROUND_3_GROUP_STAGE;
   }
 
   public static Boolean isDuplicateMatch(
@@ -70,8 +64,8 @@ public with sharing class MatchUtility {
 
   public static void addRecordToLastMatchDateByGroupMap(
     Match__c match,
-    Map<Id, Map<Id, String>> groupsByTeamMap,
-    Map<Id, Map<String, Datetime>> matchDateByGroup
+    String groupName,
+    Map<Id, Map<String, Datetime>> lastMatchDateByGroup
   ) {
     if (!MatchUtility.isGroupStageRoundThreeMatch(match)) {
       return;
@@ -79,15 +73,76 @@ public with sharing class MatchUtility {
 
     Id tournamentId = match.Tournament__c;
     Datetime matchDatetime = match.Date__c;
-    String groupName = groupsByTeamMap.get(tournamentId)
-      .get(match.Home_Team__c);
 
-    if (!matchDateByGroup.containsKey(tournamentId)) {
-      matchDateByGroup.put(tournamentId, new Map<String, Datetime>());
+    if (!lastMatchDateByGroup.containsKey(tournamentId)) {
+      lastMatchDateByGroup.put(tournamentId, new Map<String, Datetime>());
     }
 
-    if (!matchDateByGroup.get(tournamentId).containsKey(groupName)) {
-      matchDateByGroup.get(tournamentId).put(groupName, matchDatetime);
+    if (!lastMatchDateByGroup.get(tournamentId).containsKey(groupName)) {
+      lastMatchDateByGroup.get(tournamentId).put(groupName, matchDatetime);
     }
+  }
+
+  public static void removeRecordFromLastMatchDateByGroupMap(
+    Match__c match,
+    String groupName,
+    Map<Id, Map<String, Datetime>> lastMatchDateByGroup
+  ) {
+    if (!MatchUtility.isGroupStageRoundThreeMatch(match)) {
+      return;
+    }
+
+    Id tournamentId = match.Tournament__c;
+
+    if (!lastMatchDateByGroup.containsKey(tournamentId)) {
+      return;
+    }
+
+    if (!lastMatchDateByGroup.get(tournamentId).containsKey(groupName)) {
+      return;
+    }
+
+    lastMatchDateByGroup.get(tournamentId).remove(groupName);
+  }
+
+  public static void addRecordToLastMatchDateByStageMap(
+    Match__c match,
+    Map<Id, Map<String, Datetime>> lastMatchDateByStage
+  ) {
+    Id tournamentId = match.Tournament__c;
+    Datetime matchDatetime = match.Date__c;
+    String stage = match.Stage__c;
+
+    if (!lastMatchDateByStage.containsKey(tournamentId)) {
+      lastMatchDateByStage.put(tournamentId, new Map<String, Datetime>());
+    }
+
+    if (!lastMatchDateByStage.get(tournamentId).containsKey(stage)) {
+      lastMatchDateByStage.get(tournamentId).put(stage, matchDatetime);
+
+      return;
+    }
+
+    if (matchDatetime > lastMatchDateByStage.get(tournamentId).get(stage)) {
+      lastMatchDateByStage.get(tournamentId).put(stage, matchDatetime);
+    }
+  }
+
+  public static void removeRecordFromLastMatchDateByStageMap(
+    Match__c match,
+    Map<Id, Map<String, Datetime>> lastMatchDateByStage
+  ) {
+    Id tournamentId = match.Tournament__c;
+    String stage = match.Stage__c;
+
+    if (!lastMatchDateByStage.containsKey(tournamentId)) {
+      return;
+    }
+
+    if (!lastMatchDateByStage.get(tournamentId).containsKey(stage)) {
+      return;
+    }
+
+    lastMatchDateByStage.get(tournamentId).remove(stage);
   }
 }

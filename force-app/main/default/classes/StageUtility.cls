@@ -1,0 +1,57 @@
+/**
+ * @description       :
+ * @author            : hbikry@salesforce.com
+ * @group             :
+ * @last modified on  : 11-26-2024
+ * @last modified by  : hbikry@salesforce.com
+ **/
+public with sharing class StageUtility {
+  // NOTE: these values are part of the picklist field Stage__c of the Match__c object
+  // so they must be kept in sync with the picklist values
+  public final static String ROUND_1_GROUP_STAGE = 'Group Stage - Round 1';
+  public final static String ROUND_2_GROUP_STAGE = 'Group Stage - Round 2';
+  public final static String ROUND_3_GROUP_STAGE = 'Group Stage - Round 3';
+  public final static String ROUND_OF_16_KO_STAGE = 'Knockout Stage - Round of 16';
+  public final static String QUARTERFINAL_KO_STAGE = 'Knockout Stage - Quarter-finals';
+  public final static String SEMIFINAL_KO_STAGE = 'Knockout Stage - Semi-finals';
+  public final static String THIRD_PLACE_KO_STAGE = 'Knockout Stage - Third place';
+  public final static String FINAL_KO_STAGE = 'Knockout Stage - Final';
+  public final static List<String> GROUP_STAGES = new List<String>{
+    ROUND_1_GROUP_STAGE,
+    ROUND_2_GROUP_STAGE,
+    ROUND_3_GROUP_STAGE
+  };
+  public final static List<String> KO_STAGES = new List<String>{
+    ROUND_OF_16_KO_STAGE,
+    QUARTERFINAL_KO_STAGE,
+    SEMIFINAL_KO_STAGE,
+    THIRD_PLACE_KO_STAGE,
+    FINAL_KO_STAGE
+  };
+  public final static List<String> ORDERED_STAGES = new List<String>{
+    ROUND_1_GROUP_STAGE,
+    ROUND_2_GROUP_STAGE,
+    ROUND_3_GROUP_STAGE,
+    ROUND_OF_16_KO_STAGE,
+    QUARTERFINAL_KO_STAGE,
+    SEMIFINAL_KO_STAGE,
+    THIRD_PLACE_KO_STAGE,
+    FINAL_KO_STAGE
+  };
+
+  public static String nextStage(String stage) {
+    try {
+      return ORDERED_STAGES[ORDERED_STAGES.indexOf(stage) + 1];
+    } catch (ListException e) {
+      return null;
+    }
+  }
+
+  public static String previousStage(String stage) {
+    try {
+      return ORDERED_STAGES[ORDERED_STAGES.indexOf(stage) - 1];
+    } catch (ListException e) {
+      return null;
+    }
+  }
+}

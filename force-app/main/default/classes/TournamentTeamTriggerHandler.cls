@@ -2,8 +2,8 @@
  * @description       :
  * @author            : ChangeMeIn@UserSettingsUnder.SFDoc
  * @group             :
- * @last modified on  : 11-25-2024
- * @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+ * @last modified on  : 11-26-2024
+ * @last modified by  : hbikry@salesforce.com
  **/
 public without sharing class TournamentTeamTriggerHandler extends TriggerHandler {
   private Map<Id, Tournament_Team__c> oldMap;
@@ -33,11 +33,6 @@ public without sharing class TournamentTeamTriggerHandler extends TriggerHandler
       tournamentIds
     );
 
-    // If no record exists do nothing
-    if (existingRecords.isEmpty()) {
-      return;
-    }
-
     // Map to store the count of teams per tournament group
     Map<Id, Map<String, Integer>> tournamentGroupCountMap = new Map<Id, Map<String, Integer>>();
 
@@ -46,9 +41,12 @@ public without sharing class TournamentTeamTriggerHandler extends TriggerHandler
 
     for (Tournament_Team__c record : existingRecords) {
       // Add existing record to the group count map
-      addRecordToCountMap(record, tournamentGroupCountMap);
+      TournamentTeamUtility.addRecordToCountMap(
+        record,
+        tournamentGroupCountMap
+      );
       // Add existing record to tournament-team set
-      uniqueTeamSet.add(uniqueKey(record));
+      uniqueTeamSet.add(TournamentTeamUtility.uniqueKey(record));
     }
 
     for (Tournament_Team__c record : (List<Tournament_Team__c>) this.newList) {
@@ -56,79 +54,55 @@ public without sharing class TournamentTeamTriggerHandler extends TriggerHandler
       if (this.oldMap != null && this.oldMap.containsKey(record.Id)) {
         Tournament_Team__c oldRecord = this.oldMap.get(record.Id);
         // remove the old record from the group count map
-        removeRecordFromCountMap(oldRecord, tournamentGroupCountMap);
-        // remove the unique key from set
-        uniqueTeamSet.remove(uniqueKey(oldRecord));
-      }
-
-      // Add the new record to the group count map
-      addRecordToCountMap(record, tournamentGroupCountMap);
-
-      // Check if the group has more than configured max number
-      if (
-        tournamentGroupCountMap.get(record.Tournament__c).get(record.Group__c) >
-        TournamentConfigurationUtility.getDefaultMaxTeamsPerGroup()
-      ) {
-        record.addError(
-          'Each tournament group can only have up to ' +
-            TournamentConfigurationUtility.getDefaultMaxTeamsPerGroup() +
-            ' teams.'
+        TournamentTeamUtility.removeRecordFromCountMap(
+          oldRecord,
+          tournamentGroupCountMap
         );
+        // remove the unique key from set
+        uniqueTeamSet.remove(TournamentTeamUtility.uniqueKey(oldRecord));
       }
+
+      // Check for max teams per group
+      handleMaxTeamsPerGroup(record, tournamentGroupCountMap);
 
       // Check for duplicate teams
-      if (uniqueTeamSet.contains(uniqueKey(record))) {
-        record.addError(
-          'Duplicate teams are not allowed within the same tournament.'
-        );
-      }
+      handleDuplicateTeam(record, uniqueTeamSet);
     }
   }
 
-  private static void addRecordToCountMap(
+  private static void handleMaxTeamsPerGroup(
     Tournament_Team__c record,
-    Map<Id, Map<String, Integer>> countMap
+    Map<Id, Map<String, Integer>> tournamentGroupCountMap
   ) {
-    Id tournamentId = record.Tournament__c;
-    String groupName = record.Group__c;
+    // Add the new record to the group count map
+    TournamentTeamUtility.addRecordToCountMap(record, tournamentGroupCountMap);
 
-    // Initialize the inner map if it doesn't exist
-    if (!countMap.containsKey(tournamentId)) {
-      countMap.put(tournamentId, new Map<String, Integer>());
-    }
-
-    // Initialize the group count if it doesn't exist
-    if (!countMap.get(tournamentId).containsKey(groupName)) {
-      countMap.get(tournamentId).put(groupName, 0);
-    }
-
-    // Get the group count
-    Integer count = countMap.get(tournamentId).get(groupName);
-
-    // Increment the count for the group
-    countMap.get(tournamentId).put(groupName, count + 1);
-  }
-
-  private static void removeRecordFromCountMap(
-    Tournament_Team__c record,
-    Map<Id, Map<String, Integer>> countMap
-  ) {
-    Id tournamentId = record.Tournament__c;
-    String groupName = record.Group__c;
-
-    // Get the group count
-    Integer count = countMap.get(tournamentId).get(groupName);
-
-    // Decrement the count for the group
+    // Check if the group has more than configured max number
     if (
-      countMap.containsKey(tournamentId) &&
-      countMap.get(tournamentId).containsKey(groupName)
+      tournamentGroupCountMap.get(record.Tournament__c).get(record.Group__c) >
+      TournamentConfigurationUtility.getDefaultMaxTeamsPerGroup()
     ) {
-      countMap.get(tournamentId).put(groupName, count - 1);
+      record.addError(
+        'Each tournament group can only have up to ' +
+          TournamentConfigurationUtility.getDefaultMaxTeamsPerGroup() +
+          ' teams.'
+      );
     }
   }
 
-  private static String uniqueKey(Tournament_Team__c record) {
-    return record.Tournament__c + '-' + record.Team__c;
+  private static void handleDuplicateTeam(
+    Tournament_Team__c record,
+    Set<String> uniqueTeamSet
+  ) {
+    String uniqueKey = TournamentTeamUtility.uniqueKey(record);
+    // Check for duplicate teams
+    if (uniqueTeamSet.contains(uniqueKey)) {
+      record.addError(
+        'Duplicate teams are not allowed within the same tournament.'
+      );
+    }
+
+    // after check add the tournament team unique key to the set
+    uniqueTeamSet.add(uniqueKey);
   }
 }

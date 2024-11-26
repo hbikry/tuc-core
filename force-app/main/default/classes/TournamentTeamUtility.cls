@@ -31,6 +31,53 @@ public with sharing class TournamentTeamUtility {
     ];
   }
 
+  public static void addRecordToCountMap(
+    Tournament_Team__c tournamentTeam,
+    Map<Id, Map<String, Integer>> countMap
+  ) {
+    Id tournamentId = tournamentTeam.Tournament__c;
+    String groupName = tournamentTeam.Group__c;
+
+    // Initialize the inner map if it doesn't exist
+    if (!countMap.containsKey(tournamentId)) {
+      countMap.put(tournamentId, new Map<String, Integer>());
+    }
+
+    // Initialize the group count if it doesn't exist
+    if (!countMap.get(tournamentId).containsKey(groupName)) {
+      countMap.get(tournamentId).put(groupName, 0);
+    }
+
+    // Get the group count
+    Integer count = countMap.get(tournamentId).get(groupName);
+
+    // Increment the count for the group
+    countMap.get(tournamentId).put(groupName, count + 1);
+  }
+
+  public static void removeRecordFromCountMap(
+    Tournament_Team__c tournamentTeam,
+    Map<Id, Map<String, Integer>> countMap
+  ) {
+    Id tournamentId = tournamentTeam.Tournament__c;
+    String groupName = tournamentTeam.Group__c;
+
+    // Get the group count
+    Integer count = countMap.get(tournamentId).get(groupName);
+
+    // Decrement the count for the group
+    if (
+      countMap.containsKey(tournamentId) &&
+      countMap.get(tournamentId).containsKey(groupName)
+    ) {
+      countMap.get(tournamentId).put(groupName, count - 1);
+    }
+  }
+
+  public static String uniqueKey(Tournament_Team__c record) {
+    return record.Tournament__c + '-' + record.Team__c;
+  }
+
   public static void addRecordToGroupsByTeamMap(
     Tournament_Team__c tournamentTeam,
     Map<Id, Map<Id, String>> groupsByTeamMap
