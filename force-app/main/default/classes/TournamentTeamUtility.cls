@@ -1,11 +1,17 @@
 /**
- * @description       :
- * @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+ * @description       : Utility class for Tournament Team object
+ * @author            : hbikry@salesforce.com
  * @group             :
  * @last modified on  : 11-26-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class TournamentTeamUtility {
+  /**
+   * @description : Retrieves tournament ids from a list of tournament teams
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param records
+   * @return Set<Id>
+   **/
   public static Set<Id> getRelatedTournamendIds(
     List<Tournament_Team__c> records
   ) {
@@ -20,6 +26,12 @@ public with sharing class TournamentTeamUtility {
     return tournamentIds;
   }
 
+  /**
+   * @description : Retrieves records of tournament teams by tournament ids
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param tournamentIds
+   * @return List<Tournament_Team__c>
+   **/
   public static List<Tournament_Team__c> getRecordsByTournamentIds(
     Set<Id> tournamentIds
   ) {
@@ -31,6 +43,13 @@ public with sharing class TournamentTeamUtility {
     ];
   }
 
+  /**
+   * @description : Increments the team count for a group by tournament
+   *                 && Checks if the group exceeds the max teams configured
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param tournamentTeam
+   * @param countMap
+   **/
   public static void addRecordToCountMap(
     Tournament_Team__c tournamentTeam,
     Map<Id, Map<String, Integer>> countMap
@@ -55,6 +74,12 @@ public with sharing class TournamentTeamUtility {
     countMap.get(tournamentId).put(groupName, count + 1);
   }
 
+  /**
+   * @description : Decrements the team count for a group by tournament
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param tournamentTeam
+   * @param countMap
+   **/
   public static void removeRecordFromCountMap(
     Tournament_Team__c tournamentTeam,
     Map<Id, Map<String, Integer>> countMap
@@ -74,10 +99,22 @@ public with sharing class TournamentTeamUtility {
     }
   }
 
+  /**
+   * @description : Returns the unique key for a given tournament team
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param record
+   * @return String
+   **/
   public static String uniqueKey(Tournament_Team__c record) {
     return record.Tournament__c + '-' + record.Team__c;
   }
 
+  /**
+   * @description : Adds a team to its group by tournament
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param tournamentTeam
+   * @param groupsByTeamMap
+   **/
   public static void addRecordToGroupsByTeamMap(
     Tournament_Team__c tournamentTeam,
     Map<Id, Map<Id, String>> groupsByTeamMap
@@ -95,6 +132,12 @@ public with sharing class TournamentTeamUtility {
     }
   }
 
+  /**
+   * @description : Mark team elimination by tournament
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param tournamentTeam
+   * @param eliminationByTeamMap
+   **/
   public static void addRecordToEliminationsByTeamMap(
     Tournament_Team__c tournamentTeam,
     Map<Id, Map<Id, Boolean>> eliminationByTeamMap
@@ -112,6 +155,12 @@ public with sharing class TournamentTeamUtility {
     }
   }
 
+  /**
+   * @description : Increment the elimination count by tournament
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param tournamentTeam
+   * @param eliminationCountMap
+   **/
   public static void incrementEliminationsByTeamMap(
     Tournament_Team__c tournamentTeam,
     Map<Id, Integer> eliminationCountMap

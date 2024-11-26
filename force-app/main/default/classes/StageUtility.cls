@@ -1,5 +1,5 @@
 /**
- * @description       :
+ * @description       : Utility class for Stage picklist field
  * @author            : hbikry@salesforce.com
  * @group             :
  * @last modified on  : 11-26-2024
@@ -39,6 +39,12 @@ public with sharing class StageUtility {
     FINAL_KO_STAGE
   };
 
+  /**
+   * @description : Returns the next stage for a given stage
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param stage
+   * @return String
+   **/
   public static String nextStage(String stage) {
     try {
       return ORDERED_STAGES[ORDERED_STAGES.indexOf(stage) + 1];
@@ -47,6 +53,12 @@ public with sharing class StageUtility {
     }
   }
 
+  /**
+   * @description : Returns the previous stage for a given stage
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param stage
+   * @return String
+   **/
   public static String previousStage(String stage) {
     try {
       return ORDERED_STAGES[ORDERED_STAGES.indexOf(stage) - 1];

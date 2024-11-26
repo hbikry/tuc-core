@@ -1,6 +1,6 @@
 /**
- * @description       :
- * @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+ * @description       : Match trigger handler (beforeInsert, beforeUpdate)
+ * @author            : hbikry@salesforce.com
  * @group             :
  * @last modified on  : 11-26-2024
  * @last modified by  : hbikry@salesforce.com
@@ -22,6 +22,10 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     validate();
   }
 
+  /**
+   * @description : Validate matches before insert and update
+   * @author hbikry@salesforce.com | 11-26-2024
+   **/
   private void validate() {
     Set<Id> tournamentIds = MatchUtility.getRelatedTournamentIds(this.newList);
 
@@ -133,6 +137,12 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     }
   }
 
+  /**
+   * @description : Checks if the match already exists for the given tournament.
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @param uniqueMatchesSet
+   **/
   private void handleDuplicateMatch(
     Match__c match,
     Set<String> uniqueMatchesSet
@@ -144,6 +154,12 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     uniqueMatchesSet.add(MatchUtility.uniqueKey(match, true));
   }
 
+  /**
+   * @description : Checks if the home and away teams are registered to the tournament.
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @param groupsByTeamMap
+   **/
   private void handleUnregisteredTeams(
     Match__c match,
     Map<Id, Map<Id, String>> groupsByTeamMap
@@ -161,6 +177,12 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     }
   }
 
+  /**
+   * @description : Checks if the home and away team are eliminated for knockout stage matches.
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @param eliminationByTeamMap
+   **/
   private void handleEliminatedTeams(
     Match__c match,
     Map<Id, Map<Id, Boolean>> eliminationByTeamMap
@@ -182,12 +204,23 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     }
   }
 
+  /**
+   * @description : Checks if the home and away team are the same
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   **/
   private void handleDuplicateTeams(Match__c match) {
     if (match.Home_Team__c == match.Away_Team__c) {
       match.addError('A match between the same two teams is not allowed');
     }
   }
 
+  /**
+   * @description : Checks if the home and away team belong to the same group for group stage matches.
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @param groupsByTeamMap
+   **/
   private void handleGroupConformityOnGroupStage(
     Match__c match,
     Map<Id, Map<Id, String>> groupsByTeamMap
@@ -203,6 +236,13 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     }
   }
 
+  /**
+   * @description : Checks if the match date is greater than the previous stage matches
+   *                 and if the match date is lesser than the later stage matches
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @param lastMatchDateByStageMap
+   **/
   public static void handleMatchDate(
     Match__c match,
     Map<Id, Map<String, Datetime>> lastMatchDateByStageMap
@@ -235,6 +275,13 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     }
   }
 
+  /**
+   * @description : Checks if the round 3 group match date is identical to the other round 3 matches for the same group
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @param lastMatchDateByGroupMap
+   * @param matchGroup
+   **/
   private void handleLastMatchOnGroupStage(
     Match__c match,
     Map<Id, Map<String, Datetime>> lastMatchDateByGroupMap,
@@ -254,6 +301,12 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     }
   }
 
+  /**
+   * @description : Checks if the winner team is selected for ko stage matches concluded with draw
+   *                 && set the winner team for other cases
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   **/
   private void handleWinnerTeam(Match__c match) {
     // If is a knockout stage match and draw
     if (
@@ -294,6 +347,11 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     }
   }
 
+  /**
+   * @description : Calculates the draw for the match
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   **/
   private void calculateDraw(Match__c match) {
     // If is a knockout stage match set as draw as false
     // Else if home team and away team goals equal set draw as true

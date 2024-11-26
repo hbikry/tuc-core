@@ -1,6 +1,6 @@
 /**
- * @description       :
- * @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+ * @description       : Tournament team trigger handler (beforeInsert, beforeUpdate)
+ * @author            : hbikry@salesforce.com
  * @group             :
  * @last modified on  : 11-26-2024
  * @last modified by  : hbikry@salesforce.com
@@ -22,6 +22,10 @@ public without sharing class TournamentTeamTriggerHandler extends TriggerHandler
     validate();
   }
 
+  /**
+   * @description : Validate tournament team before insert and update
+   * @author hbikry@salesforce.com | 11-26-2024
+   **/
   private void validate() {
     // Set to related store tournament ids
     Set<Id> tournamentIds = TournamentTeamUtility.getRelatedTournamendIds(
@@ -70,6 +74,12 @@ public without sharing class TournamentTeamTriggerHandler extends TriggerHandler
     }
   }
 
+  /**
+   * @description : Add record to the count map && Check if the group already has the maximum number of teams
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param record
+   * @param tournamentGroupCountMap
+   **/
   private static void handleMaxTeamsPerGroup(
     Tournament_Team__c record,
     Map<Id, Map<String, Integer>> tournamentGroupCountMap
@@ -90,6 +100,12 @@ public without sharing class TournamentTeamTriggerHandler extends TriggerHandler
     }
   }
 
+  /**
+   * @description : Check if the team already registered to the tournament && Add the team to the unique set
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param record
+   * @param uniqueTeamSet
+   **/
   private static void handleDuplicateTeam(
     Tournament_Team__c record,
     Set<String> uniqueTeamSet

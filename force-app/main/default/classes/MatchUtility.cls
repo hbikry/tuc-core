@@ -1,23 +1,48 @@
 /**
- * @description       :
+ * @description       : Utility class for Match object
  * @author            : hbikry@salesforce.com
  * @group             :
  * @last modified on  : 11-26-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class MatchUtility {
+  /**
+   * @description : Checks if the match is a ko stage match
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @return Boolean
+   **/
   public static Boolean isKnockoutStageMatch(Match__c match) {
     return StageUtility.KO_STAGES.contains(match.Stage__c);
   }
 
+  /**
+   * @description : Checks if the match is a group stage match
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @return Boolean
+   **/
   public static Boolean isGroupStageMatch(Match__c match) {
     return StageUtility.GROUP_STAGES.contains(match.Stage__c);
   }
 
+  /**
+   * @description : Checks if the match is a group stage round 3 match
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @return Boolean
+   **/
   public static Boolean isGroupStageRoundThreeMatch(Match__c match) {
     return match.Stage__c == StageUtility.ROUND_3_GROUP_STAGE;
   }
 
+  /**
+   * @description : Checks if the match is duplicated in the tournament
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @param uniqueMatches
+   * @return Boolean
+   **/
   public static Boolean isDuplicateMatch(
     Match__c match,
     Set<String> uniqueMatches
@@ -26,6 +51,13 @@ public with sharing class MatchUtility {
       uniqueMatches.contains(MatchUtility.uniqueKey(match, false));
   }
 
+  /**
+   * @description : Generates unique key for the match in a tournament
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @param homeTeamFirst
+   * @return String
+   **/
   public static String uniqueKey(Match__c match, Boolean homeTeamFirst) {
     if (homeTeamFirst == null) {
       homeTeamFirst = true;
@@ -52,6 +84,12 @@ public with sharing class MatchUtility {
       match.Home_Team__c;
   }
 
+  /**
+   * @description : Retrieves related tournament ids from a list of matches
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param matches
+   * @return Set<Id>
+   **/
   public static Set<Id> getRelatedTournamentIds(List<Match__c> matches) {
     Set<Id> tournamentIds = new Set<Id>();
 
@@ -62,6 +100,13 @@ public with sharing class MatchUtility {
     return tournamentIds;
   }
 
+  /**
+   * @description : Adds group stage round 3 match date by group and by tournament
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @param groupName
+   * @param lastMatchDateByGroup
+   **/
   public static void addRecordToLastMatchDateByGroupMap(
     Match__c match,
     String groupName,
@@ -83,6 +128,13 @@ public with sharing class MatchUtility {
     }
   }
 
+  /**
+   * @description : Removes group stage round 3 match date from group for a tournament
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @param groupName
+   * @param lastMatchDateByGroup
+   **/
   public static void removeRecordFromLastMatchDateByGroupMap(
     Match__c match,
     String groupName,
@@ -105,6 +157,12 @@ public with sharing class MatchUtility {
     lastMatchDateByGroup.get(tournamentId).remove(groupName);
   }
 
+  /**
+   * @description : Adds group stage round 3 match date by stage and by tournament
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @param lastMatchDateByStage
+   **/
   public static void addRecordToLastMatchDateByStageMap(
     Match__c match,
     Map<Id, Map<String, Datetime>> lastMatchDateByStage
@@ -128,6 +186,12 @@ public with sharing class MatchUtility {
     }
   }
 
+  /**
+   * @description : Removes group stage round 3 match date from stage for a tournament
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   * @param lastMatchDateByStage
+   **/
   public static void removeRecordFromLastMatchDateByStageMap(
     Match__c match,
     Map<Id, Map<String, Datetime>> lastMatchDateByStage
