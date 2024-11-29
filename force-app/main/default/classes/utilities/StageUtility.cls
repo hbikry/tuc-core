@@ -2,20 +2,20 @@
  * @description       : Utility class for Stage picklist field
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 11-26-2024
+ * @last modified on  : 11-29-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class StageUtility {
   // NOTE: these values are part of the picklist field Stage__c of the Match__c object
   // so they must be kept in sync with the picklist values
-  public final static String ROUND_1_GROUP_STAGE = 'Group Stage - Round 1';
-  public final static String ROUND_2_GROUP_STAGE = 'Group Stage - Round 2';
-  public final static String ROUND_3_GROUP_STAGE = 'Group Stage - Round 3';
-  public final static String ROUND_OF_16_KO_STAGE = 'Knockout Stage - Round of 16';
-  public final static String QUARTERFINAL_KO_STAGE = 'Knockout Stage - Quarter-finals';
-  public final static String SEMIFINAL_KO_STAGE = 'Knockout Stage - Semi-finals';
-  public final static String THIRD_PLACE_KO_STAGE = 'Knockout Stage - Third place';
-  public final static String FINAL_KO_STAGE = 'Knockout Stage - Final';
+  public final static String ROUND_1_GROUP_STAGE = 'Round 1';
+  public final static String ROUND_2_GROUP_STAGE = 'Round 2';
+  public final static String ROUND_3_GROUP_STAGE = 'Round 3';
+  public final static String ROUND_OF_16_KO_STAGE = 'Round of 16';
+  public final static String QUARTERFINAL_KO_STAGE = 'Quarter-finals';
+  public final static String SEMIFINAL_KO_STAGE = 'Semi-finals';
+  public final static String THIRD_PLACE_KO_STAGE = 'Third place play-off';
+  public final static String FINAL_KO_STAGE = 'Final';
   public final static List<String> GROUP_STAGES = new List<String>{
     ROUND_1_GROUP_STAGE,
     ROUND_2_GROUP_STAGE,

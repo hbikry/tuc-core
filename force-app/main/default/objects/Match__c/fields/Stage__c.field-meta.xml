@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Stage__c</fullName>
     <label>Stage</label>
@@ -10,44 +10,44 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Group Stage - Round 1</fullName>
+                <fullName>Round 1</fullName>
                 <default>false</default>
-                <label>Group Stage - Round 1</label>
+                <label>Round 1</label>
             </value>
             <value>
-                <fullName>Group Stage - Round 2</fullName>
+                <fullName>Round 2</fullName>
                 <default>false</default>
-                <label>Group Stage - Round 2</label>
+                <label>Round 2</label>
             </value>
             <value>
-                <fullName>Group Stage - Round 3</fullName>
+                <fullName>Round 3</fullName>
                 <default>false</default>
-                <label>Group Stage - Round 3</label>
+                <label>Round 3</label>
             </value>
             <value>
-                <fullName>Knockout Stage - Round of 16</fullName>
+                <fullName>Round of 16</fullName>
                 <default>false</default>
-                <label>Knockout Stage - Round of 16</label>
+                <label>Round of 16</label>
             </value>
             <value>
-                <fullName>Knockout Stage - Quarter-finals</fullName>
+                <fullName>Quarter-finals</fullName>
                 <default>false</default>
-                <label>Knockout Stage - Quarter-finals</label>
+                <label>Quarter-finals</label>
             </value>
             <value>
-                <fullName>Knockout Stage - Semi-finals</fullName>
+                <fullName>Semi-finals</fullName>
                 <default>false</default>
-                <label>Knockout Stage - Semi-finals</label>
+                <label>Semi-finals</label>
             </value>
             <value>
-                <fullName>Knockout Stage - Third place</fullName>
+                <fullName>Third place play-off</fullName>
                 <default>false</default>
-                <label>Knockout Stage - Third place</label>
+                <label>Third place play-off</label>
             </value>
             <value>
-                <fullName>Knockout Stage - Final</fullName>
+                <fullName>Final</fullName>
                 <default>false</default>
-                <label>Knockout Stage - Final</label>
+                <label>Final</label>
             </value>
         </valueSetDefinition>
     </valueSet>
