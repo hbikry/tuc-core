@@ -24,10 +24,6 @@
         <name>Flow</name>
     </types>
     <types>
-        <members>*</members>
-        <name>ApexClass</name>
-    </types>
-    <types>
         <members>TournamentReports/</members>
         <name>Report</name>
     </types>
@@ -38,6 +34,10 @@
     <types>
         <members>Company</members>
         <name>Settings</name>
+    </types>
+    <types>
+        <members>TeamFlags</members>
+        <name>StaticResource</name>
     </types>
     <version>62.0</version>
 </Package>

@@ -1,0 +1,28 @@
+<!--
+  @description       : 
+  @author            : hbikry@salesforce.com
+  @group             : 
+  @last modified on  : 11-29-2024
+  @last modified by  : hbikry@salesforce.com
+-->
+<template>
+  <div class="slds-grid slds-p-around_x-small match-team-result">
+    <div class="slds-col slds-size_3-of-12 slds-m-right_x-small">
+      <img
+        src={flagUrl}
+        alt={teamName}
+        class="slds-image slds-image_medium team-flag"
+      />
+    </div>
+    <div
+      class="slds-col slds-size_6-of-12 slds-text-align_center slds-m-right_x-small team-name"
+    >
+      <span class="slds-text-title_bold">{teamName}</span>
+    </div>
+    <div
+      class="slds-col slds-size_2-of-12 slds-text-align_right slds-m-right_x-small team-score"
+    >
+      <span class="slds-text-title_bold">{teamScore}</span>
+    </div>
+  </div>
+</template>

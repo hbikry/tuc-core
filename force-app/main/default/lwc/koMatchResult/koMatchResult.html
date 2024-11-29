@@ -1,0 +1,32 @@
+<!--
+  @description       : 
+  @author            : hbikry@salesforce.com
+  @group             : 
+  @last modified on  : 11-29-2024
+  @last modified by  : hbikry@salesforce.com
+-->
+<template>
+  <div class="slds-box slds-p-around_small">
+    <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+      <div>{formattedDate}</div>
+    </div>
+    <div
+      class="slds-grid slds-grid_align-spread slds-relative slds-grid_vertical"
+    >
+      <div class="slds-col">
+        <c-ko-match-result-item
+          team-name={match.homeTeamName}
+          team-score={match.homeTeamGoals}
+          is-winner={isHomeTeamWinner}
+        ></c-ko-match-result-item>
+      </div>
+      <div class="slds-col">
+        <c-ko-match-result-item
+          team-name={match.awayTeamName}
+          team-score={match.awayTeamGoals}
+          is-winner={isAwayTeamWinner}
+        ></c-ko-match-result-item>
+      </div>
+    </div>
+  </div>
+</template>

@@ -1,0 +1,19 @@
+.team-flag {
+  width: 24px;
+  /* Fixed size for the flag */
+  height: auto;
+}
+
+.team-name {
+  font-weight: bold;
+  /* Bold text for the team name */
+  white-space: nowrap;
+  /* Prevent the name from wrapping */
+}
+
+.team-score {
+  font-weight: bold;
+  /* Bold text for the score */
+  white-space: nowrap;
+  /* Prevent the score from wrapping */
+}
