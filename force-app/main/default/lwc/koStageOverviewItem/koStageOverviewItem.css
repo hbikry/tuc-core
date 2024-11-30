@@ -1,0 +1,25 @@
+.stage-overview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  /* Ensure the container takes full height */
+}
+
+.matches-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  flex-grow: 1;
+  /* Ensure the container grows to fill available space */
+  width: 100%;
+}
+
+.match-item {
+  margin: 0.5rem 0;
+  width: 100%;
+  /* Ensure uniform width */
+  box-sizing: border-box;
+  /* Include padding and border in the element's total width and height */
+}

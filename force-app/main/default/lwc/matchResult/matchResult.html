@@ -14,18 +14,22 @@
       class="slds-grid slds-grid_align-spread slds-relative slds-grid_vertical"
     >
       <div class="slds-col">
-        <c-ko-match-result-item
+        <c-match-result-item
           team-name={match.homeTeamName}
           team-score={match.homeTeamGoals}
+          team-code={match.homeTeamCode}
+          team-flag-code={match.homeTeamFlagCode}
           is-winner={isHomeTeamWinner}
-        ></c-ko-match-result-item>
+        ></c-match-result-item>
       </div>
       <div class="slds-col">
-        <c-ko-match-result-item
+        <c-match-result-item
           team-name={match.awayTeamName}
           team-score={match.awayTeamGoals}
+          team-code={match.awayTeamCode}
+          team-flag-code={match.awayTeamFlagCode}
           is-winner={isAwayTeamWinner}
-        ></c-ko-match-result-item>
+        ></c-match-result-item>
       </div>
     </div>
   </div>

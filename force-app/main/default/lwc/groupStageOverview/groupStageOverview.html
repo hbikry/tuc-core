@@ -1,1 +1,30 @@
-<template> </template>
+<!--
+  @description       : 
+  @author            : hbikry@salesforce.com
+  @group             : 
+  @last modified on  : 11-29-2024
+  @last modified by  : hbikry@salesforce.com
+-->
+<template>
+  <lightning-accordion>
+    <template for:each={groupStages} for:item="groupStage">
+      <lightning-accordion-section
+        key={groupStage.stageName}
+        label={groupStage.stageName}
+      >
+        <div class="slds-scrollable_x scroll-container">
+          <div class="slds-grid slds-wrap slds-gutters">
+            <template for:each={groupStage.matches} for:item="match">
+              <div
+                key={match.Id}
+                class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small"
+              >
+                <c-match-result match={match}></c-match-result>
+              </div>
+            </template>
+          </div>
+        </div>
+      </lightning-accordion-section>
+    </template>
+  </lightning-accordion>
+</template>
