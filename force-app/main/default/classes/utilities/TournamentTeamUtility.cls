@@ -2,7 +2,7 @@
  * @description       : Utility class for Tournament Team object
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 11-26-2024
+ * @last modified on  : 11-30-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class TournamentTeamUtility {
@@ -177,5 +177,31 @@ public with sharing class TournamentTeamUtility {
         eliminationCountMap.get(tournamentId) + 1
       );
     }
+  }
+
+  public static List<Tournament_Team__c> getOverviewTournamentTeams(
+    Id tournamentId
+  ) {
+    return [
+      SELECT
+        Id,
+        Group__c,
+        Team__c,
+        Team__r.Name,
+        Team__r.Code__c,
+        Team__r.Flag_Code__c,
+        Goals_For__c,
+        Goals_Against__c,
+        Goal_Difference__c,
+        Wins__c,
+        Losses__c,
+        Draws__c,
+        Matches_Played__c,
+        Points__c
+      FROM Tournament_Team__c
+      WHERE Tournament__c = :tournamentId
+      WITH USER_MODE
+      ORDER BY Points__c DESC
+    ];
   }
 }

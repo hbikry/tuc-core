@@ -1,0 +1,19 @@
+<!--
+  @description       : 
+  @author            : hbikry@salesforce.com
+  @group             : 
+  @last modified on  : 11-30-2024
+  @last modified by  : hbikry@salesforce.com
+-->
+<template>
+  <lightning-datatable
+    key-field="teamName"
+    data={data}
+    show-row-number-column
+    hide-checkbox-column
+    columns={columns}
+    column-widths-mode="auto"
+  >
+    <c-custom-data-types slot="customdatatypes"></c-custom-data-types>
+  </lightning-datatable>
+</template>

@@ -2,7 +2,7 @@
  * @description       : Utility class for Match object
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 11-26-2024
+ * @last modified on  : 11-30-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class MatchUtility {
@@ -208,5 +208,33 @@ public with sharing class MatchUtility {
     }
 
     lastMatchDateByStage.get(tournamentId).remove(stage);
+  }
+
+  public static List<Match__c> getOverviewMatches(
+    Id tournamentId,
+    List<String> stages
+  ) {
+    return [
+      SELECT
+        Id,
+        Stage__c,
+        Date__c,
+        Home_Team__r.Id,
+        Home_Team__r.Name,
+        Home_Team__r.Code__c,
+        Home_Team__r.Flag_Code__c,
+        Home_Team_Goals__c,
+        Away_Team__r.Id,
+        Away_Team__r.Name,
+        Away_Team__r.Code__c,
+        Away_Team__r.Flag_Code__c,
+        Away_Team_Goals__c,
+        Winner_Team__c,
+        Draw__c
+      FROM Match__c
+      WHERE Tournament__c = :tournamentId AND Stage__c IN :stages
+      WITH USER_MODE
+      ORDER BY Date__c ASC
+    ];
   }
 }

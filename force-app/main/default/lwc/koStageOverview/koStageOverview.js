@@ -1,5 +1,5 @@
 import { LightningElement } from "lwc";
-import getKnockoutStageOverview from "@salesforce/apex/TournamentOverviewController.getKnockoutStageOverview";
+import getKnockoutStageMatchesOverview from "@salesforce/apex/TournamentOverviewController.getKnockoutStageMatchesOverview";
 
 export default class KoStageOverview extends LightningElement {
   tournamentId = "a01d200000BneXcAAJ";
@@ -11,7 +11,7 @@ export default class KoStageOverview extends LightningElement {
   }
 
   fetchMatches() {
-    getKnockoutStageOverview({ tournamentId: this.tournamentId })
+    getKnockoutStageMatchesOverview({ tournamentId: this.tournamentId })
       .then((result) => {
         this.matchesByStage = Object.entries(result).map(([stage, matches]) => {
           return { stage, matches };
