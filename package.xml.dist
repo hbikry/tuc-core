@@ -5,6 +5,7 @@
         <members>Team__c</members>
         <members>Tournament_Team__c</members>
         <members>Match__c</members>
+        <members>Tournament_Configuration__c</members>
         <name>CustomObject</name>
     </types>
     <types>
@@ -12,6 +13,8 @@
         <members>Team__c</members>
         <members>Tournament_Team__c</members>
         <members>Match__c</members>
+        <members>Knockout_Stage</members>
+        <members>Group_Stage</members>
         <name>CustomTab</name>
     </types>
     <types>

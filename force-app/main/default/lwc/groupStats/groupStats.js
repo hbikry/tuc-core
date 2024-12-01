@@ -6,9 +6,11 @@ const columns = [
     label: "#",
     type: "teamFlagType",
     typeAttributes: {
-      flagUrl: { fieldName: "flagUrl" }
+      flagUrl: { fieldName: "flagUrl" },
+      initialWidth: 10
     },
-    cellAttributes: { alignment: "center" }
+    cellAttributes: { alignment: "center" },
+    initialWidth: 10
   },
   { label: "Team", fieldName: "teamName", type: "text" },
   { label: "MP", fieldName: "matchesPlayed", type: "number" },

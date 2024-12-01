@@ -1,1 +1,17 @@
-<template> </template>
+<!--
+  @description       : 
+  @author            : hbikry@salesforce.com
+  @group             : 
+  @last modified on  : 12-01-2024
+  @last modified by  : hbikry@salesforce.com
+-->
+<template>
+  <div class="slds-grid slds-nowrap">
+    <template for:each={matchesByStage} for:item="item">
+      <div key={item.stage} class="slds-col">
+        <c-stage-overview-item stage={item.stage} matches={item.matches}>
+        </c-stage-overview-item>
+      </div>
+    </template>
+  </div>
+</template>

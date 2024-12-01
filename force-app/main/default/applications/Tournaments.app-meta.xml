@@ -13,7 +13,8 @@
     <label>Tournaments</label>
     <navType>Standard</navType>
     <tabs>standard-home</tabs>
-    <tabs>Tournament_Overview</tabs>
+    <tabs>Knockout_Stage</tabs>
+    <tabs>Group_Stage</tabs>
     <tabs>Tournament__c</tabs>
     <tabs>Team__c</tabs>
     <tabs>Tournament_Team__c</tabs>

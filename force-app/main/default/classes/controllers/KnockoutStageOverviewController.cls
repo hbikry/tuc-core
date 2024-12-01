@@ -2,10 +2,10 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 11-30-2024
+ * @last modified on  : 12-01-2024
  * @last modified by  : hbikry@salesforce.com
  **/
-public with sharing class TournamentOverviewController {
+public with sharing class KnockoutStageOverviewController {
   /**
    * @description
    * @author hbikry@salesforce.com | 11-29-2024
@@ -13,7 +13,7 @@ public with sharing class TournamentOverviewController {
    * @return Map<String, List<MatchOverview>>
    **/
   @AuraEnabled
-  public static Map<String, List<MatchOverview>> getKnockoutStageMatchesOverview(
+  public static Map<String, List<MatchOverview>> getMatchesOverview(
     Id tournamentId
   ) {
     Map<String, List<MatchOverview>> matchOverviewByStage = new Map<String, List<MatchOverview>>();

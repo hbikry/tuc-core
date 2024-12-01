@@ -2,7 +2,7 @@
   @description       : 
   @author            : hbikry@salesforce.com
   @group             : 
-  @last modified on  : 11-30-2024
+  @last modified on  : 12-01-2024
   @last modified by  : hbikry@salesforce.com
 -->
 <template>
@@ -15,18 +15,18 @@
             name={item.group}
             label={item.group}
           >
-            <div class="slds-grid">
-              <div class="slds-col">
+            <lightning-tabset>
+              <lightning-tab label="Stats">
                 <c-group-stats
                   teams-stats={item.overview.teamsStats}
                 ></c-group-stats>
-              </div>
-              <div class="slds-col">
+              </lightning-tab>
+              <lightning-tab label="Matches">
                 <c-group-matches
                   matches={item.overview.matches}
                 ></c-group-matches>
-              </div>
-            </div>
+              </lightning-tab>
+            </lightning-tabset>
           </lightning-accordion-section>
         </template>
       </lightning-accordion>
