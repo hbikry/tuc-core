@@ -7,6 +7,9 @@
 -->
 <template>
   <div class="slds-box slds-theme_default slds-m-around_medium">
+    <c-tournament-selector
+      ontournamentchange={handleTournamentChange}
+    ></c-tournament-selector>
     <template lwc:if={ready}>
       <lightning-accordion allow-multiple-sections-open>
         <template for:each={overviewByGroup} for:item="item">
@@ -33,12 +36,6 @@
     </template>
     <template lwc:elseif={hasError}>
       <c-error-alert error-message={error}></c-error-alert>
-    </template>
-    <template lwc:else>
-      <lightning-spinner
-        alternative-text="Loading"
-        size="medium"
-      ></lightning-spinner>
     </template>
   </div>
 </template>
