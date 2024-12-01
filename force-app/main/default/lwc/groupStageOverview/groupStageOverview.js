@@ -1,14 +1,10 @@
-import { LightningElement } from "lwc";
+import { LightningElement, track } from "lwc";
 import getGroupStageOverview from "@salesforce/apex/GroupStageOverviewController.getGroupStageOverview";
 
 export default class GroupStageOverview extends LightningElement {
-  tournamentId = "a01d200000BneXcAAJ";
-  overviewByGroup;
-  error;
-
-  connectedCallback() {
-    this.fetchOverview();
-  }
+  tournamentId = undefined;
+  @track overviewByGroup;
+  @track error;
 
   fetchOverview() {
     getGroupStageOverview({ tournamentId: this.tournamentId })
@@ -32,5 +28,14 @@ export default class GroupStageOverview extends LightningElement {
 
   get hasError() {
     return this.error !== undefined;
+  }
+
+  handleTournamentChange(event) {
+    const tournamentId = event.detail;
+
+    if (tournamentId !== null) {
+      this.tournamentId = tournamentId;
+      this.fetchOverview();
+    }
   }
 }

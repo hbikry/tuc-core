@@ -1,14 +1,10 @@
-import { LightningElement } from "lwc";
+import { LightningElement, track } from "lwc";
 import getMatchesOverview from "@salesforce/apex/KnockoutStageOverviewController.getMatchesOverview";
 
 export default class KoStageOverview extends LightningElement {
-  tournamentId = "a01d200000BneXcAAJ";
-  matchesByStage;
-  error;
-
-  connectedCallback() {
-    this.fetchMatches();
-  }
+  tournamentId = undefined;
+  @track matchesByStage;
+  @track error;
 
   fetchMatches() {
     getMatchesOverview({ tournamentId: this.tournamentId })
@@ -30,6 +26,15 @@ export default class KoStageOverview extends LightningElement {
 
   get hasError() {
     return this.error !== undefined;
+  }
+
+  handleTournamentChange(event) {
+    const tournamentId = event.detail;
+
+    if (tournamentId !== null) {
+      this.tournamentId = tournamentId;
+      this.fetchMatches();
+    }
   }
 
   scrollLeft() {
