@@ -2,17 +2,13 @@
   @description       : 
   @author            : hbikry@salesforce.com
   @group             : 
-  @last modified on  : 11-29-2024
+  @last modified on  : 11-30-2024
   @last modified by  : hbikry@salesforce.com
 -->
 <template>
   <div class="slds-grid slds-p-around_x-small match-team-result">
     <div class="slds-col slds-size_3-of-12 slds-m-right_x-small">
-      <img
-        src={flagUrl}
-        alt={teamCode}
-        class="slds-image slds-image_medium team-flag"
-      />
+      <c-team-flag flag-code={teamFlagCode}></c-team-flag>
     </div>
     <div
       class="slds-col slds-size_6-of-12 slds-text-align_center slds-m-right_x-small"

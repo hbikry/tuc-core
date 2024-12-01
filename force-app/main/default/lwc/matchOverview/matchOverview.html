@@ -2,7 +2,7 @@
   @description       : 
   @author            : hbikry@salesforce.com
   @group             : 
-  @last modified on  : 11-29-2024
+  @last modified on  : 11-30-2024
   @last modified by  : hbikry@salesforce.com
 -->
 <template>
@@ -14,22 +14,22 @@
       class="slds-grid slds-grid_align-spread slds-relative slds-grid_vertical"
     >
       <div class="slds-col">
-        <c-match-result-item
+        <c-match-overview-item
           team-name={match.homeTeamName}
           team-score={match.homeTeamGoals}
           team-code={match.homeTeamCode}
           team-flag-code={match.homeTeamFlagCode}
           is-winner={isHomeTeamWinner}
-        ></c-match-result-item>
+        ></c-match-overview-item>
       </div>
       <div class="slds-col">
-        <c-match-result-item
+        <c-match-overview-item
           team-name={match.awayTeamName}
           team-score={match.awayTeamGoals}
           team-code={match.awayTeamCode}
           team-flag-code={match.awayTeamFlagCode}
           is-winner={isAwayTeamWinner}
-        ></c-match-result-item>
+        ></c-match-overview-item>
       </div>
     </div>
   </div>

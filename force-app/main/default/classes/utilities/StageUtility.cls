@@ -2,7 +2,7 @@
  * @description       : Utility class for Stage picklist field
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 11-29-2024
+ * @last modified on  : 11-30-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class StageUtility {

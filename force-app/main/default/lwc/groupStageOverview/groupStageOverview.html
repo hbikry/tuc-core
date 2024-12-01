@@ -2,29 +2,43 @@
   @description       : 
   @author            : hbikry@salesforce.com
   @group             : 
-  @last modified on  : 11-29-2024
+  @last modified on  : 12-01-2024
   @last modified by  : hbikry@salesforce.com
 -->
 <template>
-  <lightning-accordion>
-    <template for:each={groupStages} for:item="groupStage">
-      <lightning-accordion-section
-        key={groupStage.stageName}
-        label={groupStage.stageName}
-      >
-        <div class="slds-scrollable_x scroll-container">
-          <div class="slds-grid slds-wrap slds-gutters">
-            <template for:each={groupStage.matches} for:item="match">
-              <div
-                key={match.Id}
-                class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 slds-p-around_small"
-              >
-                <c-match-result match={match}></c-match-result>
-              </div>
-            </template>
-          </div>
-        </div>
-      </lightning-accordion-section>
+  <div class="slds-box slds-theme_default slds-m-around_medium">
+    <template lwc:if={ready}>
+      <lightning-accordion allow-multiple-sections-open>
+        <template for:each={overviewByGroup} for:item="item">
+          <lightning-accordion-section
+            key={item.group}
+            name={item.group}
+            label={item.group}
+          >
+            <lightning-tabset>
+              <lightning-tab label="Stats">
+                <c-group-stats
+                  teams-stats={item.overview.teamsStats}
+                ></c-group-stats>
+              </lightning-tab>
+              <lightning-tab label="Matches">
+                <c-group-matches
+                  matches={item.overview.matches}
+                ></c-group-matches>
+              </lightning-tab>
+            </lightning-tabset>
+          </lightning-accordion-section>
+        </template>
+      </lightning-accordion>
     </template>
-  </lightning-accordion>
+    <template lwc:elseif={hasError}>
+      <c-error-alert error-message={error}></c-error-alert>
+    </template>
+    <template lwc:else>
+      <lightning-spinner
+        alternative-text="Loading"
+        size="medium"
+      ></lightning-spinner>
+    </template>
+  </div>
 </template>
