@@ -2,7 +2,7 @@
  * @description       : Match trigger handler (beforeInsert, beforeUpdate)
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 11-26-2024
+ * @last modified on  : 12-01-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public without sharing class MatchTriggerHandler extends TriggerHandler {
@@ -32,6 +32,10 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     List<Tournament_Team__c> tournamentTeams = TournamentTeamUtility.getRecordsByTournamentIds(
       tournamentIds
     );
+
+    if (tournamentTeams.isEmpty()) {
+      throw new RuntimeException('No team registered to the tournament');
+    }
 
     Map<Id, Map<Id, String>> groupsByTeamMap = new Map<Id, Map<Id, String>>();
     Map<Id, Map<Id, Boolean>> eliminationByTeamMap = new Map<Id, Map<Id, Boolean>>();
@@ -308,9 +312,10 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
    * @param match
    **/
   private void handleWinnerTeam(Match__c match) {
+    Boolean isKnockoutStageMatch = MatchUtility.isKnockoutStageMatch(match);
     // If is a knockout stage match and draw
     if (
-      MatchUtility.isKnockoutStageMatch(match) &&
+      isKnockoutStageMatch &&
       (match.Home_Team_Goals__c == match.Away_Team_Goals__c)
     ) {
       // If winner team is null
@@ -343,7 +348,7 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     }
     // Else -> set winner team as null
     else {
-      match.Winner_Team__c = null;
+      match.Winner_Team__c = isKnockoutStageMatch ? match.Winner_Team__c : null;
     }
   }
 
