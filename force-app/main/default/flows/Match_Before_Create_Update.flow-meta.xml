@@ -7,7 +7,7 @@
         <name>UpdatedName</name>
         <dataType>String</dataType>
         <expression
-    >{!$Record.Tournament__r.Name} &amp; &quot; - &quot; &amp; TEXT({!$Record.Stage__c}) &amp; &quot; : &quot; &amp; {!$Record.Home_Team__r.Name} &amp; &quot; VS &quot; &amp; {!$Record.Away_Team__r.Name}</expression>
+    >{!$Record.Tournament__r.Code__c} &amp; &quot;-&quot; &amp; TEXT({!$Record.Stage__c}) &amp; &quot;: &quot; &amp; {!$Record.Home_Team__r.Code__c} &amp; &quot; VS &quot; &amp; {!$Record.Away_Team__r.Code__c}</expression>
     </formulas>
     <interviewLabel
   >Match_Before_Create_Update {!$Flow.CurrentDateTime}</interviewLabel>

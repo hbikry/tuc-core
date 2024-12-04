@@ -7,7 +7,7 @@
         <name>UpdatedName</name>
         <dataType>String</dataType>
         <expression
-    >{!$Record.Tournament__r.Name} &amp; &quot; - &quot; &amp; {!$Record.Team__r.Name} &amp; &quot; - &quot; &amp; TEXT({!$Record.Group__c})</expression>
+    >{!$Record.Tournament__r.Code__c} &amp; &quot; - &quot; &amp; {!$Record.Team__r.Code__c} &amp; &quot; - &quot; &amp; TEXT({!$Record.Group__c})</expression>
     </formulas>
     <interviewLabel
   >TourmanetTeam_Before_Create_Update {!$Flow.CurrentDateTime}</interviewLabel>
