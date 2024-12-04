@@ -2,7 +2,7 @@
  * @description       : Utility class for Match object
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 11-30-2024
+ * @last modified on  : 12-04-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class MatchUtility {
@@ -236,5 +236,26 @@ public with sharing class MatchUtility {
       WITH USER_MODE
       ORDER BY Date__c ASC
     ];
+  }
+
+  public static void generateMatchResult(Match__c match) {
+    match.Home_Team_Goals__c = Math.floor(Math.random() * 10).intValue();
+    match.Away_Team_Goals__c = Math.floor(Math.random() * 10).intValue();
+
+    if (isGroupStageMatch(match)) {
+      return;
+    }
+
+    if (match.Home_Team_Goals__c != match.Away_Team_Goals__c) {
+      return;
+    }
+
+    List<Id> teamIds = new List<Id>{ match.Home_Team__c, match.Away_Team__c };
+
+    // Generate a random index (0 or 1)
+    Integer randomIndex = Math.floor(Math.random() * 2).intValue();
+    // Return the record at the random index
+
+    match.Winner_Team__c = teamIds[randomIndex];
   }
 }

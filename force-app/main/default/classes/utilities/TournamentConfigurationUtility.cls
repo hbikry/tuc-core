@@ -2,7 +2,7 @@
  * @description       : Utility class for Tournament Configuration Custom Setting
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 11-26-2024
+ * @last modified on  : 12-03-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class TournamentConfigurationUtility {
@@ -33,5 +33,15 @@ public with sharing class TournamentConfigurationUtility {
    **/
   public static Integer getDefaultMaxGroups() {
     return (Integer) Tournament_Configuration__c.getOrgDefaults().Max_Groups__c;
+  }
+
+  public static Integer getDefaultMaxTeamsPerTournament() {
+    return getDefaultMaxGroups() * getDefaultMaxTeamsPerGroup();
+  }
+
+  public static Integer getDefaultMaxMatchesByGroup() {
+    return getDefaultMaxGroupMatchesPerTeam() *
+      getDefaultMaxTeamsPerGroup() /
+      2;
   }
 }
