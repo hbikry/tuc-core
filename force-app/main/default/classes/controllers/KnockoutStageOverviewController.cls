@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-01-2024
+ * @last modified on  : 12-02-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class KnockoutStageOverviewController {
@@ -17,6 +17,10 @@ public with sharing class KnockoutStageOverviewController {
     Id tournamentId
   ) {
     Map<String, List<MatchOverview>> matchOverviewByStage = new Map<String, List<MatchOverview>>();
+    // Init match overview by stage map
+    for (String stage : StageUtility.KO_STAGES) {
+      matchOverviewByStage.put(stage, new List<MatchOverview>());
+    }
 
     for (
       Match__c match : MatchUtility.getOverviewMatches(
@@ -24,10 +28,6 @@ public with sharing class KnockoutStageOverviewController {
         StageUtility.KO_STAGES
       )
     ) {
-      if (!matchOverviewByStage.containsKey(match.Stage__c)) {
-        matchOverviewByStage.put(match.Stage__c, new List<MatchOverview>());
-      }
-
       matchOverviewByStage.get(match.Stage__c).add(new MatchOverview(match));
     }
 

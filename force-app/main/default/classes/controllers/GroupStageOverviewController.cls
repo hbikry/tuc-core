@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 11-30-2024
+ * @last modified on  : 12-02-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class GroupStageOverviewController {
@@ -17,7 +17,7 @@ public with sharing class GroupStageOverviewController {
       StageUtility.GROUP_STAGES
     );
     List<Tournament_Team__c> tournamentTeams = TournamentTeamUtility.getOverviewTournamentTeams(
-      tournamentId
+      new Set<Id>{ tournamentId }
     );
 
     Map<Id, String> groupsByTeam = new Map<Id, String>();
