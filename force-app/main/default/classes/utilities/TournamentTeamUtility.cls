@@ -2,7 +2,7 @@
  * @description       : Utility class for Tournament Team object
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-03-2024
+ * @last modified on  : 12-05-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class TournamentTeamUtility {
@@ -187,6 +187,7 @@ public with sharing class TournamentTeamUtility {
         Id,
         Group__c,
         Team__c,
+        Tournament__c,
         Team__r.Name,
         Team__r.Code__c,
         Team__r.Flag_Code__c,
@@ -197,7 +198,8 @@ public with sharing class TournamentTeamUtility {
         Losses__c,
         Draws__c,
         Matches_Played__c,
-        Points__c
+        Points__c,
+        Qualification_Points__c
       FROM Tournament_Team__c
       WHERE Tournament__c IN :tournamentIds
       WITH USER_MODE
@@ -230,5 +232,32 @@ public with sharing class TournamentTeamUtility {
       homeTeam.Losses__c += 1;
       awayTeam.Wins__c += 1;
     }
+  }
+
+  public static List<Tournament_Team__c> getUpdatedTournamentTeamStats(
+    Match__c match,
+    Tournament_Team__c homeTeam,
+    Tournament_Team__c awayTeam
+  ) {
+    updateMatchTeamsStats(match, homeTeam, awayTeam);
+
+    return new List<Tournament_Team__c>{
+      new Tournament_Team__c(
+        Id = homeTeam.Id,
+        Goals_For__c = homeTeam.Goals_For__c,
+        Goals_Against__c = homeTeam.Goals_Against__c,
+        Wins__c = homeTeam.Wins__c,
+        Losses__c = homeTeam.Losses__c,
+        Draws__c = homeTeam.Draws__c
+      ),
+      new Tournament_Team__c(
+        Id = awayTeam.Id,
+        Goals_For__c = awayTeam.Goals_For__c,
+        Goals_Against__c = awayTeam.Goals_Against__c,
+        Wins__c = awayTeam.Wins__c,
+        Losses__c = awayTeam.Losses__c,
+        Draws__c = awayTeam.Draws__c
+      )
+    };
   }
 }

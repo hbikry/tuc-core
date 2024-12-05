@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-03-2024
+ * @last modified on  : 12-05-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class ListUtils {
@@ -15,5 +15,17 @@ public with sharing class ListUtils {
       listToShuffle[i] = listToShuffle[j];
       listToShuffle[j] = temp;
     }
+  }
+
+  public static Object pickRandomObject(List<Object> objects) {
+    if (objects.isEmpty()) {
+      return null;
+    }
+
+    // Generate a random index (0 or 1)
+    Integer randomIndex = Math.floor(Math.random() * objects.size()).intValue();
+
+    // Return the record at the random index
+    return objects[randomIndex];
   }
 }

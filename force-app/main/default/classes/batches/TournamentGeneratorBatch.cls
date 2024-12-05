@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-04-2024
+ * @last modified on  : 12-05-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class TournamentGeneratorBatch implements Database.Batchable<SObject>, Database.Stateful {
@@ -36,21 +36,25 @@ public with sharing class TournamentGeneratorBatch implements Database.Batchable
 
       // Create the tournament
       Tournament__c tournament = createTournament();
+      Logger.info('Tournament created');
 
       // Shuffle teams list
       ListUtils.shuffle(teams);
 
-      // Init tournament teams
+      // Generate tournament teams
       List<Tournament_Team__c> tournamentTeams = generateTournamentTeams(
         tournament.Id,
         teams
       );
+      Logger.info('Tournament teams generated');
 
       // Generate group stage matches
       generateGroupStageMatches(tournament.Id, tournamentTeams);
+      Logger.info('Group stage matches generated');
 
       // Generate knockout stage matches
-      //generateKnockoutStageMatches(tournament.Id, teams);
+      //generateKnockoutStageMatches(tournament.Id, tournamentTeams);
+      Logger.info('Knockout stage matches generated');
     } catch (Exception e) {
       Database.rollback(savePoint);
       Logger.error(
@@ -202,29 +206,4 @@ public with sharing class TournamentGeneratorBatch implements Database.Batchable
 
     insert matches;
   }
-
-  // private void generateKnockoutStageMatches(
-  //   Id tournamentId,
-  //   List<Team__c> teams
-  // ) {
-  //   List<Match__c> matches = new List<Match__c>();
-  //   Integer numberOfRounds =
-  //     (Integer) Math.log(teams.size()) / (Integer) Math.log(2);
-  //   for (Integer round = 1; round <= numberOfRounds; round++) {
-  //     for (Integer i = 0; i < teams.size(); i += 2) {
-  //       matches.add(
-  //         new Match__c(
-  //           Tournament__c = tournamentId,
-  //           Home_Team__c = teams[i].Id,
-  //           Away_Team__c = teams[i + 1].Id,
-  //           Match_Date__c = Date.today().addDays(Math.random() * 30 + 30)
-  //         )
-  //       );
-  //     }
-  //     // Simulate winners advancing to the next round
-  //     teams = teams.subList(0, teams.size() / 2);
-  //   }
-
-  //   insert matches;
-  // }
 }

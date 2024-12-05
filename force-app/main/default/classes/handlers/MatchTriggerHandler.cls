@@ -2,16 +2,20 @@
  * @description       : Match trigger handler (beforeInsert, beforeUpdate)
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-01-2024
+ * @last modified on  : 12-05-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public without sharing class MatchTriggerHandler extends TriggerHandler {
   private Map<Id, Match__c> oldMap;
   private List<Match__c> newList;
+  Boolean isBeforeInsert = false;
+  Boolean isBeforeUpdate = false;
 
   public MatchTriggerHandler() {
     newList = (List<Match__c>) Trigger.new;
     oldMap = (Map<Id, Match__c>) Trigger.oldMap;
+    isBeforeInsert = Trigger.isBefore && Trigger.isInsert;
+    isBeforeUpdate = Trigger.isBefore && Trigger.isUpdate;
   }
 
   public override void beforeInsert() {
@@ -22,122 +26,212 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     validate();
   }
 
+  public override void afterInsert() {
+    updateTournamentTeams();
+  }
+
+  public override void afterUpdate() {
+    updateTournamentTeams();
+  }
+
   /**
    * @description : Validate matches before insert and update
    * @author hbikry@salesforce.com | 11-26-2024
    **/
   private void validate() {
-    Set<Id> tournamentIds = MatchUtility.getRelatedTournamentIds(this.newList);
-
-    List<Tournament_Team__c> tournamentTeams = TournamentTeamUtility.getRecordsByTournamentIds(
-      tournamentIds
-    );
-
-    if (tournamentTeams.isEmpty()) {
-      throw new RuntimeException('No team registered to the tournament');
-    }
-
-    Map<Id, Map<Id, String>> groupsByTeamMap = new Map<Id, Map<Id, String>>();
-    Map<Id, Map<Id, Boolean>> eliminationByTeamMap = new Map<Id, Map<Id, Boolean>>();
-    Map<Id, Integer> eliminationCountMap = new Map<Id, Integer>();
-
-    for (Tournament_Team__c tournamentTeam : tournamentTeams) {
-      TournamentTeamUtility.addRecordToGroupsByTeamMap(
-        tournamentTeam,
-        groupsByTeamMap
+    try {
+      Set<Id> tournamentIds = MatchUtility.getRelatedTournamentIds(
+        this.newList
       );
-      TournamentTeamUtility.addRecordToEliminationsByTeamMap(
-        tournamentTeam,
-        eliminationByTeamMap
-      );
-      TournamentTeamUtility.incrementEliminationsByTeamMap(
-        tournamentTeam,
-        eliminationCountMap
-      );
-    }
 
-    List<Match__c> existingRecords = [
-      SELECT Tournament__c, Home_Team__c, Away_Team__c, Date__c, Stage__c
-      FROM Match__c
-      WHERE Tournament__c IN :tournamentIds
-      WITH USER_MODE
-    ];
-
-    Map<Id, Map<String, Datetime>> lastMatchDateByGroupMap = new Map<Id, Map<String, Datetime>>();
-    Map<Id, Map<String, Datetime>> lastMatchDateByStageMap = new Map<Id, Map<String, Datetime>>();
-    Set<String> uniqueMatchesSet = new Set<String>();
-
-    for (Match__c match : existingRecords) {
-      MatchUtility.addRecordToLastMatchDateByGroupMap(
-        match,
-        groupsByTeamMap.get(match.Tournament__c).get(match.Home_Team__c),
-        lastMatchDateByGroupMap
+      List<Tournament_Team__c> tournamentTeams = TournamentTeamUtility.getRecordsByTournamentIds(
+        tournamentIds
       );
-      MatchUtility.addRecordToLastMatchDateByStageMap(
-        match,
-        lastMatchDateByStageMap
-      );
-      uniqueMatchesSet.add(MatchUtility.uniqueKey(match, true));
-    }
 
-    for (Match__c match : this.newList) {
-      // If updating
-      if (this.oldMap != null && this.oldMap.containsKey(match.Id)) {
-        Match__c oldRecord = this.oldMap.get(match.Id);
-        // remove the old record from the group count map
-        MatchUtility.removeRecordFromLastMatchDateByGroupMap(
-          oldRecord,
-          groupsByTeamMap.get(oldRecord.Tournament__c)
-            .get(oldRecord.Home_Team__c),
-          lastMatchDateByGroupMap
-        );
-        MatchUtility.removeRecordFromLastMatchDateByStageMap(
-          oldRecord,
-          lastMatchDateByStageMap
-        );
-        // remove the unique key from set
-        uniqueMatchesSet.remove(MatchUtility.uniqueKey(oldRecord, true));
+      if (tournamentTeams.isEmpty()) {
+        throw new RuntimeException('No team registered to the tournament');
       }
 
-      MatchUtility.addRecordToLastMatchDateByGroupMap(
-        match,
-        groupsByTeamMap.get(match.Tournament__c).get(match.Home_Team__c),
-        lastMatchDateByGroupMap
+      Map<Id, Map<Id, String>> groupsByTeamMap = new Map<Id, Map<Id, String>>();
+      Map<Id, Map<Id, Boolean>> eliminationByTeamMap = new Map<Id, Map<Id, Boolean>>();
+      Map<Id, Integer> eliminationCountMap = new Map<Id, Integer>();
+
+      for (Tournament_Team__c tournamentTeam : tournamentTeams) {
+        TournamentTeamUtility.addRecordToGroupsByTeamMap(
+          tournamentTeam,
+          groupsByTeamMap
+        );
+        TournamentTeamUtility.addRecordToEliminationsByTeamMap(
+          tournamentTeam,
+          eliminationByTeamMap
+        );
+        TournamentTeamUtility.incrementEliminationsByTeamMap(
+          tournamentTeam,
+          eliminationCountMap
+        );
+      }
+
+      List<Match__c> existingRecords = [
+        SELECT Tournament__c, Home_Team__c, Away_Team__c, Date__c, Stage__c
+        FROM Match__c
+        WHERE Tournament__c IN :tournamentIds
+        WITH USER_MODE
+      ];
+
+      Map<Id, Map<String, Datetime>> lastMatchDateByGroupMap = new Map<Id, Map<String, Datetime>>();
+      Map<Id, Map<String, Datetime>> lastMatchDateByStageMap = new Map<Id, Map<String, Datetime>>();
+      Set<String> uniqueMatchesSet = new Set<String>();
+
+      for (Match__c match : existingRecords) {
+        MatchUtility.addRecordToLastMatchDateByGroupMap(
+          match,
+          groupsByTeamMap.get(match.Tournament__c).get(match.Home_Team__c),
+          lastMatchDateByGroupMap
+        );
+        MatchUtility.addRecordToLastMatchDateByStageMap(
+          match,
+          lastMatchDateByStageMap
+        );
+        uniqueMatchesSet.add(MatchUtility.uniqueKey(match, true));
+      }
+
+      for (Match__c match : this.newList) {
+        // If updating
+        if (this.oldMap != null && this.oldMap.containsKey(match.Id)) {
+          Match__c oldRecord = this.oldMap.get(match.Id);
+          // remove the old record from the group count map
+          MatchUtility.removeRecordFromLastMatchDateByGroupMap(
+            oldRecord,
+            groupsByTeamMap.get(oldRecord.Tournament__c)
+              .get(oldRecord.Home_Team__c),
+            lastMatchDateByGroupMap
+          );
+          MatchUtility.removeRecordFromLastMatchDateByStageMap(
+            oldRecord,
+            lastMatchDateByStageMap
+          );
+          // remove the unique key from set
+          uniqueMatchesSet.remove(MatchUtility.uniqueKey(oldRecord, true));
+        }
+
+        MatchUtility.addRecordToLastMatchDateByGroupMap(
+          match,
+          groupsByTeamMap.get(match.Tournament__c).get(match.Home_Team__c),
+          lastMatchDateByGroupMap
+        );
+        MatchUtility.addRecordToLastMatchDateByStageMap(
+          match,
+          lastMatchDateByStageMap
+        );
+
+        // Check for duplicate match
+        handleDuplicateMatch(match, uniqueMatchesSet);
+
+        // Check if home team and away team are registered to the tournament
+        handleUnregisteredTeams(match, groupsByTeamMap);
+
+        // Check if home team or away team are eliminated for knockout stage matches
+        handleEliminatedTeams(match, eliminationByTeamMap);
+
+        // Check for duplicate home and away teams
+        handleDuplicateTeams(match);
+
+        // Check if home and away team belong to the same group for group stage matches
+        handleGroupConformityOnGroupStage(match, groupsByTeamMap);
+
+        handleMatchDate(match, lastMatchDateByStageMap);
+
+        // Check match date on round 3 group stage
+        handleLastMatchOnGroupStage(
+          match,
+          lastMatchDateByGroupMap,
+          groupsByTeamMap.get(match.Tournament__c).get(match.Home_Team__c)
+        );
+
+        // Check on winner team and handle it
+        handleWinnerTeam(match);
+
+        // Calculate draw based on goals and stage
+        calculateDraw(match);
+      }
+
+      Logger.info(
+        'Match validation completed for ' + this.newList.size() + ' records'
       );
-      MatchUtility.addRecordToLastMatchDateByStageMap(
-        match,
-        lastMatchDateByStageMap
+    } catch (Exception e) {
+      Logger.error('Error occurred on match validation : ', e.getMessage());
+
+      throw e;
+    } finally {
+      Logger.saveLog();
+    }
+  }
+
+  /**
+   * @description update related tournament team records
+   * @author hbikry@salesforce.com | 12-05-2024
+   **/
+  private void updateTournamentTeams() {
+    try {
+      Set<Id> tournamentIds = MatchUtility.getRelatedTournamentIds(
+        this.newList
+      );
+      List<Tournament_Team__c> tournamentTeams = TournamentTeamUtility.getOverviewTournamentTeams(
+        tournamentIds
+      );
+      Map<Id, Map<Id, Tournament_Team__c>> tournamentTeamsByTeamMap = new Map<Id, Map<Id, Tournament_Team__c>>();
+      for (Tournament_Team__c tournamentTeam : tournamentTeams) {
+        Id tournamentId = tournamentTeam.Tournament__c;
+        if (!tournamentTeamsByTeamMap.containsKey(tournamentId)) {
+          tournamentTeamsByTeamMap.put(
+            tournamentId,
+            new Map<Id, Tournament_Team__c>()
+          );
+        }
+
+        tournamentTeamsByTeamMap.get(tournamentId)
+          .put(tournamentTeam.Team__c, tournamentTeam);
+      }
+
+      Map<Id, Tournament_Team__c> tournamentTeamsToUpdateMap = new Map<Id, Tournament_Team__c>();
+      for (Match__c match : this.newList) {
+        Id tournamentId = match.Tournament__c;
+        Tournament_Team__c homeTournamentTeam = tournamentTeamsByTeamMap.get(
+            tournamentId
+          )
+          .get(match.Home_Team__c);
+        Tournament_Team__c awayTournamentTeam = tournamentTeamsByTeamMap.get(
+            tournamentId
+          )
+          .get(match.Away_Team__c);
+
+        List<Tournament_Team__c> updatedTournamentTeams = TournamentTeamUtility.getUpdatedTournamentTeamStats(
+          match,
+          homeTournamentTeam,
+          awayTournamentTeam
+        );
+
+        tournamentTeamsToUpdateMap.put(
+          match.Home_Team__c,
+          updatedTournamentTeams[0]
+        );
+        tournamentTeamsToUpdateMap.put(
+          match.Away_Team__c,
+          updatedTournamentTeams[1]
+        );
+      }
+
+      update as user tournamentTeamsToUpdateMap.values();
+    } catch (Exception e) {
+      Logger.error(
+        'Error occurred on updating teams stats from matches : ' +
+        e.getMessage(),
+        e
       );
 
-      // Check for duplicate match
-      handleDuplicateMatch(match, uniqueMatchesSet);
-
-      // Check if home team and away team are registered to the tournament
-      handleUnregisteredTeams(match, groupsByTeamMap);
-
-      // Check if home team or away team are eliminated for knockout stage matches
-      handleEliminatedTeams(match, eliminationByTeamMap);
-
-      // Check for duplicate home and away teams
-      handleDuplicateTeams(match);
-
-      // Check if home and away team belong to the same group for group stage matches
-      handleGroupConformityOnGroupStage(match, groupsByTeamMap);
-
-      handleMatchDate(match, lastMatchDateByStageMap);
-
-      // Check match date on round 3 group stage
-      handleLastMatchOnGroupStage(
-        match,
-        lastMatchDateByGroupMap,
-        groupsByTeamMap.get(match.Tournament__c).get(match.Home_Team__c)
-      );
-
-      // Check on winner team and handle it
-      handleWinnerTeam(match);
-
-      // Calculate draw based on goals and stage
-      calculateDraw(match);
+      throw e;
+    } finally {
+      Logger.saveLog();
     }
   }
 

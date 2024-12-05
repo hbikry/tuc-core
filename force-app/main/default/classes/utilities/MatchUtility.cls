@@ -2,7 +2,7 @@
  * @description       : Utility class for Match object
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-04-2024
+ * @last modified on  : 12-05-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class MatchUtility {
@@ -250,12 +250,9 @@ public with sharing class MatchUtility {
       return;
     }
 
-    List<Id> teamIds = new List<Id>{ match.Home_Team__c, match.Away_Team__c };
-
-    // Generate a random index (0 or 1)
-    Integer randomIndex = Math.floor(Math.random() * 2).intValue();
     // Return the record at the random index
-
-    match.Winner_Team__c = teamIds[randomIndex];
+    match.Winner_Team__c = (Id) ListUtils.pickRandomObject(
+      new List<Id>{ match.Home_Team__c, match.Away_Team__c }
+    );
   }
 }
