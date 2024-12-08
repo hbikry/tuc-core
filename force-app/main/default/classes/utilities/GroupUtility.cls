@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 11-30-2024
+ * @last modified on  : 12-07-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class GroupUtility {
@@ -16,7 +16,7 @@ public with sharing class GroupUtility {
   public final static String GROUP_F = 'Group F';
   public final static String GROUP_G = 'Group G';
   public final static String GROUP_H = 'Group H';
-  public final static Set<String> GROUPS = new Set<String>{
+  public final static List<String> GROUPS = new List<String>{
     GROUP_A,
     GROUP_B,
     GROUP_C,
@@ -26,16 +26,44 @@ public with sharing class GroupUtility {
     GROUP_G,
     GROUP_H
   };
-  public final static Set<String> FIRST_BRACKET_GROUPS = new Set<String>{
+  public final static List<String> FIRST_BRACKET_GROUPS = new List<String>{
     GROUP_A,
     GROUP_B,
     GROUP_C,
     GROUP_D
   };
-  public final static Set<String> SECOND_BRACKETS_GROUPS = new Set<String>{
+  public final static List<String> SECOND_BRACKETS_GROUPS = new List<String>{
     GROUP_E,
     GROUP_F,
     GROUP_G,
     GROUP_H
   };
+
+  /**
+   * @description : Returns the next group for a group
+   * @author hbikry@salesforce.com | 12-07-2024
+   * @param groupName
+   * @return String
+   **/
+  public static String nextGroup(String groupName) {
+    try {
+      return GROUPS[GROUPS.indexOf(groupName) + 1];
+    } catch (ListException e) {
+      return null;
+    }
+  }
+
+  /**
+   * @description : Returns the previous group for a group
+   * @author hbikry@salesforce.com | 12-07-2024
+   * @param groupName
+   * @return String
+   **/
+  public static String previousGroup(String groupName) {
+    try {
+      return GROUPS[GROUPS.indexOf(groupName) - 1];
+    } catch (ListException e) {
+      return null;
+    }
+  }
 }

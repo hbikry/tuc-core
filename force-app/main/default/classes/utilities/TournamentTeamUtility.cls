@@ -2,7 +2,7 @@
  * @description       : Utility class for Tournament Team object
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-05-2024
+ * @last modified on  : 12-08-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class TournamentTeamUtility {
@@ -144,7 +144,7 @@ public with sharing class TournamentTeamUtility {
   ) {
     Id tournamentId = tournamentTeam.Tournament__c;
     Id teamId = tournamentTeam.Team__c;
-    Boolean eliminated = tournamentTeam.Eliminated__c;
+    Boolean eliminated = (Boolean) tournamentTeam.Eliminated__c;
 
     if (!eliminationByTeamMap.containsKey(tournamentId)) {
       eliminationByTeamMap.put(tournamentId, new Map<Id, Boolean>());
@@ -203,7 +203,11 @@ public with sharing class TournamentTeamUtility {
       FROM Tournament_Team__c
       WHERE Tournament__c IN :tournamentIds
       WITH USER_MODE
-      ORDER BY Qualification_Points__c DESC
+      ORDER BY
+        Points__c DESC,
+        Qualification_Points__c DESC,
+        Goals_For__c DESC,
+        Goals_Against__c ASC
     ];
   }
 

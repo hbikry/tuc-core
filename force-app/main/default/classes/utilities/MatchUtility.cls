@@ -2,7 +2,7 @@
  * @description       : Utility class for Match object
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-05-2024
+ * @last modified on  : 12-08-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class MatchUtility {
@@ -34,6 +34,16 @@ public with sharing class MatchUtility {
    **/
   public static Boolean isGroupStageRoundThreeMatch(Match__c match) {
     return match.Stage__c == StageUtility.ROUND_3_GROUP_STAGE;
+  }
+
+  /**
+   * @description Checks if the match is the third place play off
+   * @author hbikry@salesforce.com | 12-07-2024
+   * @param match
+   * @return Boolean
+   **/
+  public static Boolean isThirdPlayPlayOffMatch(Match__c match) {
+    return match.Stage__c == StageUtility.THIRD_PLACE_KO_STAGE;
   }
 
   /**
@@ -239,8 +249,8 @@ public with sharing class MatchUtility {
   }
 
   public static void generateMatchResult(Match__c match) {
-    match.Home_Team_Goals__c = Math.floor(Math.random() * 10).intValue();
-    match.Away_Team_Goals__c = Math.floor(Math.random() * 10).intValue();
+    match.Home_Team_Goals__c = Math.floor(Math.random() * 7).intValue();
+    match.Away_Team_Goals__c = Math.floor(Math.random() * 7).intValue();
 
     if (isGroupStageMatch(match)) {
       return;

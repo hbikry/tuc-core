@@ -2,36 +2,46 @@
  * @description       : Match trigger handler (beforeInsert, beforeUpdate)
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-05-2024
+ * @last modified on  : 12-08-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public without sharing class MatchTriggerHandler extends TriggerHandler {
   private Map<Id, Match__c> oldMap;
   private List<Match__c> newList;
+  private Map<Id, Match__c> newMap;
   Boolean isBeforeInsert = false;
   Boolean isBeforeUpdate = false;
 
   public MatchTriggerHandler() {
     newList = (List<Match__c>) Trigger.new;
     oldMap = (Map<Id, Match__c>) Trigger.oldMap;
+    newMap = (Map<Id, Match__c>) Trigger.newMap;
     isBeforeInsert = Trigger.isBefore && Trigger.isInsert;
     isBeforeUpdate = Trigger.isBefore && Trigger.isUpdate;
   }
 
   public override void beforeInsert() {
+    Logger.info('Before insert match trigger started', this.newList);
     validate();
+    Logger.info('Before insert match trigger finished');
   }
 
   public override void beforeUpdate() {
+    Logger.info('Before update match trigger started', this.newList);
     validate();
+    Logger.info('Before update match trigger finished');
   }
 
   public override void afterInsert() {
-    updateTournamentTeams();
+    Logger.info('After insert match trigger started', this.newList);
+    updateRelatedRecords();
+    Logger.info('After insert match trigger finished');
   }
 
   public override void afterUpdate() {
-    updateTournamentTeams();
+    Logger.info('After update match trigger started', this.newList);
+    updateRelatedRecords();
+    Logger.info('After update match trigger finished');
   }
 
   /**
@@ -44,6 +54,16 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
         this.newList
       );
 
+      List<Tournament__c> tournaments = TournamentUtility.getTournaments(
+        tournamentIds
+      );
+
+      if (tournaments.isEmpty()) {
+        throw new RuntimeException(
+          'No tournaments found to which the matches are being added/updated'
+        );
+      }
+
       List<Tournament_Team__c> tournamentTeams = TournamentTeamUtility.getRecordsByTournamentIds(
         tournamentIds
       );
@@ -54,7 +74,6 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
 
       Map<Id, Map<Id, String>> groupsByTeamMap = new Map<Id, Map<Id, String>>();
       Map<Id, Map<Id, Boolean>> eliminationByTeamMap = new Map<Id, Map<Id, Boolean>>();
-      Map<Id, Integer> eliminationCountMap = new Map<Id, Integer>();
 
       for (Tournament_Team__c tournamentTeam : tournamentTeams) {
         TournamentTeamUtility.addRecordToGroupsByTeamMap(
@@ -64,10 +83,6 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
         TournamentTeamUtility.addRecordToEliminationsByTeamMap(
           tournamentTeam,
           eliminationByTeamMap
-        );
-        TournamentTeamUtility.incrementEliminationsByTeamMap(
-          tournamentTeam,
-          eliminationCountMap
         );
       }
 
@@ -82,6 +97,7 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
       Map<Id, Map<String, Datetime>> lastMatchDateByStageMap = new Map<Id, Map<String, Datetime>>();
       Set<String> uniqueMatchesSet = new Set<String>();
 
+      // populate utility maps from existing match records
       for (Match__c match : existingRecords) {
         MatchUtility.addRecordToLastMatchDateByGroupMap(
           match,
@@ -95,7 +111,10 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
         uniqueMatchesSet.add(MatchUtility.uniqueKey(match, true));
       }
 
-      for (Match__c match : this.newList) {
+      // Sort match list by stage
+      List<Match__c> matches = this.newList.clone();
+      matches.sort(new MatchStageComparator());
+      for (Match__c match : matches) {
         // If updating
         if (this.oldMap != null && this.oldMap.containsKey(match.Id)) {
           Match__c oldRecord = this.oldMap.get(match.Id);
@@ -148,8 +167,8 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
           groupsByTeamMap.get(match.Tournament__c).get(match.Home_Team__c)
         );
 
-        // Check on winner team and handle it
-        handleWinnerTeam(match);
+        // Check winner team on draw ko stage match, Else set it
+        checkAndSetWinnerTeam(match);
 
         // Calculate draw based on goals and stage
         calculateDraw(match);
@@ -159,7 +178,7 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
         'Match validation completed for ' + this.newList.size() + ' records'
       );
     } catch (Exception e) {
-      Logger.error('Error occurred on match validation : ', e.getMessage());
+      Logger.error('Error occurred on match validation : ', e);
 
       throw e;
     } finally {
@@ -168,18 +187,24 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
   }
 
   /**
-   * @description update related tournament team records
+   * @description update related records
    * @author hbikry@salesforce.com | 12-05-2024
    **/
-  private void updateTournamentTeams() {
+  private void updateRelatedRecords() {
     try {
+      // Retrieve related tournament ids
       Set<Id> tournamentIds = MatchUtility.getRelatedTournamentIds(
         this.newList
       );
+      // Retrieve related tournaments
+      //Map<Id, Tournament__c> tournaments = TournamentUtility.getTournaments(tournamentIds);
+      // Retrieve related tournament team records
       List<Tournament_Team__c> tournamentTeams = TournamentTeamUtility.getOverviewTournamentTeams(
         tournamentIds
       );
+      // Init tournament teams by team map
       Map<Id, Map<Id, Tournament_Team__c>> tournamentTeamsByTeamMap = new Map<Id, Map<Id, Tournament_Team__c>>();
+      // populate tournament teams by team map
       for (Tournament_Team__c tournamentTeam : tournamentTeams) {
         Id tournamentId = tournamentTeam.Tournament__c;
         if (!tournamentTeamsByTeamMap.containsKey(tournamentId)) {
@@ -193,35 +218,48 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
           .put(tournamentTeam.Team__c, tournamentTeam);
       }
 
+      // Init tournament teams to update map
       Map<Id, Tournament_Team__c> tournamentTeamsToUpdateMap = new Map<Id, Tournament_Team__c>();
-      for (Match__c match : this.newList) {
+      List<Tournament__c> tournamentsToUpdate = new List<Tournament__c>();
+
+      // Sort match list by stage
+      List<Match__c> matches = this.newList.clone();
+      matches.sort(new MatchStageComparator());
+      for (Match__c match : matches) {
         Id tournamentId = match.Tournament__c;
-        Tournament_Team__c homeTournamentTeam = tournamentTeamsByTeamMap.get(
-            tournamentId
-          )
+        // Related tournament team for match home team
+        Tournament_Team__c homeTournamentTeam = tournamentTeamsByTeamMap
+          .get(tournamentId)
           .get(match.Home_Team__c);
-        Tournament_Team__c awayTournamentTeam = tournamentTeamsByTeamMap.get(
-            tournamentId
-          )
+        // Related tournament team for match away team
+        Tournament_Team__c awayTournamentTeam = tournamentTeamsByTeamMap
+          .get(tournamentId)
           .get(match.Away_Team__c);
 
-        List<Tournament_Team__c> updatedTournamentTeams = TournamentTeamUtility.getUpdatedTournamentTeamStats(
+        // Update tournament teams from group stage matches & add records to update map
+        updateStats(
           match,
           homeTournamentTeam,
-          awayTournamentTeam
+          awayTournamentTeam,
+          tournamentTeamsToUpdateMap
         );
 
-        tournamentTeamsToUpdateMap.put(
-          match.Home_Team__c,
-          updatedTournamentTeams[0]
+        // Mark loser team on knockout stage matches as eliminated
+        handleKnockoutEliminations(
+          match,
+          homeTournamentTeam,
+          awayTournamentTeam,
+          tournamentTeamsToUpdateMap
         );
-        tournamentTeamsToUpdateMap.put(
-          match.Away_Team__c,
-          updatedTournamentTeams[1]
-        );
+
+        // Set champion team on final stage match
+        setChampion(match, tournamentsToUpdate);
       }
 
+      // Update tournament teams
       update as user tournamentTeamsToUpdateMap.values();
+      // Update tournaments
+      update as user tournamentsToUpdate;
     } catch (Exception e) {
       Logger.error(
         'Error occurred on updating teams stats from matches : ' +
@@ -233,6 +271,79 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     } finally {
       Logger.saveLog();
     }
+  }
+
+  /**
+   * @description
+   * @author hbikry@salesforce.com | 12-07-2024
+   * @param match
+   * @param homeTournamentTeam
+   * @param awayTournamentTeam
+   * @param tournamentTeamsToUpdateMap
+   **/
+  private void updateStats(
+    Match__c match,
+    Tournament_Team__c homeTournamentTeam,
+    Tournament_Team__c awayTournamentTeam,
+    Map<Id, Tournament_Team__c> tournamentTeamsToUpdateMap
+  ) {
+    if (!MatchUtility.isGroupStageMatch(match)) {
+      return;
+    }
+
+    // Get updated tournament teams (calculate stats from match)
+    List<Tournament_Team__c> updatedTournamentTeams = TournamentTeamUtility.getUpdatedTournamentTeamStats(
+      match,
+      homeTournamentTeam,
+      awayTournamentTeam
+    );
+
+    // Add updated tournament teams to update map
+    tournamentTeamsToUpdateMap.put(
+      match.Home_Team__c,
+      updatedTournamentTeams[0] // [0] Home team
+    );
+    tournamentTeamsToUpdateMap.put(
+      match.Away_Team__c,
+      updatedTournamentTeams[1] // [1] Away team
+    );
+  }
+
+  private void handleKnockoutEliminations(
+    Match__c match,
+    Tournament_Team__c homeTournamentTeam,
+    Tournament_Team__c awayTournamentTeam,
+    Map<Id, Tournament_Team__c> tournamentTeamsToUpdateMap
+  ) {
+    if (!MatchUtility.isKnockoutStageMatch(match)) {
+      return;
+    }
+
+    if (match.Winner_Team__c == homeTournamentTeam.Id) {
+      awayTournamentTeam.Eliminated__c = true;
+      tournamentTeamsToUpdateMap.put(match.Away_Team__c, awayTournamentTeam);
+    }
+
+    if (match.Winner_Team__c == awayTournamentTeam.Id) {
+      homeTournamentTeam.Eliminated__c = true;
+      tournamentTeamsToUpdateMap.put(match.Home_Team__c, homeTournamentTeam);
+    }
+  }
+
+  private void setChampion(
+    Match__c match,
+    List<Tournament__c> tournamentsToUpdate
+  ) {
+    if (match.Stage__c != StageUtility.FINAL_KO_STAGE) {
+      return;
+    }
+
+    Tournament__c tournament = new Tournament__c(
+      Id = match.Tournament__c,
+      Champion__c = match.Winner_Team__c
+    );
+
+    tournamentsToUpdate.add(tournament);
   }
 
   /**
@@ -289,15 +400,19 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
       return;
     }
 
+    if (MatchUtility.isThirdPlayPlayOffMatch(match)) {
+      return;
+    }
+
     if (eliminationByTeamMap.get(match.Tournament__c).get(match.Home_Team__c)) {
       match.addError(
-        'Home team is eliminated and cannot proceed to knockout stage matches'
+        'Home team is eliminated and cannot be part of any matches'
       );
     }
 
     if (eliminationByTeamMap.get(match.Tournament__c).get(match.Away_Team__c)) {
       match.addError(
-        'Away team is eliminated and cannot proceed to knockout stage matches'
+        'Away team is eliminated and cannot be part of any matches'
       );
     }
   }
@@ -405,7 +520,7 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
    * @author hbikry@salesforce.com | 11-26-2024
    * @param match
    **/
-  private void handleWinnerTeam(Match__c match) {
+  private void checkAndSetWinnerTeam(Match__c match) {
     Boolean isKnockoutStageMatch = MatchUtility.isKnockoutStageMatch(match);
     // If is a knockout stage match and draw
     if (
@@ -440,7 +555,7 @@ public without sharing class MatchTriggerHandler extends TriggerHandler {
     else if (match.Home_Team_Goals__c < match.Away_Team_Goals__c) {
       match.Winner_Team__c = match.Away_Team__c;
     }
-    // Else -> set winner team as null
+    // Else -> set winner team as null for group stage matches
     else {
       match.Winner_Team__c = isKnockoutStageMatch ? match.Winner_Team__c : null;
     }
