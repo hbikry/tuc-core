@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-08-2024
+ * @last modified on  : 12-09-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class RoundOf16GeneratorBatch implements Database.Batchable<SObject>, Database.Stateful {
@@ -14,6 +14,12 @@ public with sharing class RoundOf16GeneratorBatch implements Database.Batchable<
     this.originalTransactionId = loggerTransactionId;
   }
 
+  /**
+   * @description : Batch start -> Retrieve tournament teams
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param bc
+   * @return List<SObject>
+   **/
   public List<SObject> start(Database.BatchableContext bc) {
     List<Tournament_Team__c> tournamentTeams = [
       SELECT Team__c, Group__c
@@ -30,9 +36,14 @@ public with sharing class RoundOf16GeneratorBatch implements Database.Batchable<
     return tournamentTeams;
   }
 
+  /**
+   * @description : Batch execute -> generate round of 16 matches
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param bc
+   * @param scope
+   **/
   public void execute(Database.BatchableContext bc, List<SObject> scope) {
     Logger.setParentLogTransactionId(this.originalTransactionId);
-    Logger.info('Executing round of 16 batch generator', scope);
     Savepoint savePoint = Database.setSavepoint();
     try {
       List<Tournament_Team__c> tournamentTeams = (List<Tournament_Team__c>) scope;
@@ -52,6 +63,11 @@ public with sharing class RoundOf16GeneratorBatch implements Database.Batchable<
     }
   }
 
+  /**
+   * @description : Batch finish -> log job record & queue quarter-finals generator batch
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param bc
+   **/
   public void finish(Database.BatchableContext bc) {
     AsyncApexJob job = [
       SELECT
@@ -76,6 +92,12 @@ public with sharing class RoundOf16GeneratorBatch implements Database.Batchable<
     Logger.saveLog();
   }
 
+  /**
+   * @description : Generate & insert round of 16 matches
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param tournamentTeams
+   * @return List<Match__c>
+   **/
   private List<Match__c> generateRoundOf16Matches(
     List<Tournament_Team__c> tournamentTeams
   ) {

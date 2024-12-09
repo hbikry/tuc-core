@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-08-2024
+ * @last modified on  : 12-09-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class SemiFinalsGeneratorBatch implements Database.Batchable<SObject>, Database.Stateful {
@@ -14,6 +14,12 @@ public with sharing class SemiFinalsGeneratorBatch implements Database.Batchable
     this.originalTransactionId = loggerTransactionId;
   }
 
+  /**
+   * @description : Batch start -> retrieve quarter-finals matches
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param bc
+   * @return List<SObject>
+   **/
   public List<SObject> start(Database.BatchableContext bc) {
     List<Match__c> quarterFinalsMatches = [
       SELECT Id, Home_Team__c, Away_Team__c, Winner_Team__c
@@ -31,9 +37,14 @@ public with sharing class SemiFinalsGeneratorBatch implements Database.Batchable
     return quarterFinalsMatches;
   }
 
+  /**
+   * @description : Batch execute -> generate semi-finals matches
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param bc
+   * @param scope
+   **/
   public void execute(Database.BatchableContext bc, List<SObject> scope) {
     Logger.setParentLogTransactionId(this.originalTransactionId);
-    Logger.info('Executing semi-finals batch generator', scope);
     Savepoint savePoint = Database.setSavepoint();
     try {
       List<Match__c> quarterFinalsMatches = (List<Match__c>) scope;
@@ -52,6 +63,11 @@ public with sharing class SemiFinalsGeneratorBatch implements Database.Batchable
     }
   }
 
+  /**
+   * @description : Batch finish -> log job record & queue finals generator batch
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param bc
+   **/
   public void finish(Database.BatchableContext bc) {
     AsyncApexJob job = [
       SELECT
@@ -65,17 +81,25 @@ public with sharing class SemiFinalsGeneratorBatch implements Database.Batchable
       WHERE Id = :bc.getJobId()
       WITH USER_MODE
     ];
+
     Logger.setParentLogTransactionId(this.originalTransactionId);
     Logger.info('Semi-finals generator batch finished', job);
-    Logger.info('Queuing finals generator batch');
+
     FinalsGeneratorBatch nextBatch = new FinalsGeneratorBatch(
       this.tournamentId,
       this.originalTransactionId
     );
     Database.executeBatch(nextBatch);
+
     Logger.saveLog();
   }
 
+  /**
+   * @description : Generate & insert semi-finals matches
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param quarterFinalsMatches
+   * @return List<Match__c>
+   **/
   private List<Match__c> generateSemiFinalsMatches(
     List<Match__c> quarterFinalsMatches
   ) {

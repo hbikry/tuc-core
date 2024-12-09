@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-08-2024
+ * @last modified on  : 12-09-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class GroupStageGeneratorBatch implements Database.Batchable<SObject>, Database.Stateful {
@@ -17,6 +17,12 @@ public with sharing class GroupStageGeneratorBatch implements Database.Batchable
     this.originalTransactionId = originalTransactionId;
   }
 
+  /**
+   * @description : Batch start -> Retrieve tournament teams
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param bc
+   * @return List<SObject>
+   **/
   public List<SObject> start(Database.BatchableContext bc) {
     List<Tournament_Team__c> tournamentTeams = [
       SELECT Id, Team__c
@@ -32,9 +38,14 @@ public with sharing class GroupStageGeneratorBatch implements Database.Batchable
     return tournamentTeams;
   }
 
+  /**
+   * @description : Batch execute -> Generate group stage matches
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param bc
+   * @param scope
+   **/
   public void execute(Database.BatchableContext bc, List<SObject> scope) {
     Logger.setParentLogTransactionId(this.originalTransactionId);
-    Logger.info('Executing group stage batch generator', scope);
     Savepoint savePoint = Database.setSavepoint();
     try {
       List<Tournament_Team__c> tournamentTeams = (List<Tournament_Team__c>) scope;
@@ -55,6 +66,11 @@ public with sharing class GroupStageGeneratorBatch implements Database.Batchable
     }
   }
 
+  /**
+   * @description : Batch finish -> Log job record & queue round of 16 generator batch
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param bc
+   **/
   public void finish(Database.BatchableContext bc) {
     AsyncApexJob job = [
       SELECT
@@ -68,14 +84,16 @@ public with sharing class GroupStageGeneratorBatch implements Database.Batchable
       WHERE Id = :bc.getJobId()
       WITH USER_MODE
     ];
+
     Logger.setParentLogTransactionId(this.originalTransactionId);
     Logger.info('Group stage generator batch finished', job);
-    Logger.info('Queuing round of 16 generator batch');
+
     RoundOf16GeneratorBatch nextBatch = new RoundOf16GeneratorBatch(
       this.tournamentId,
       this.originalTransactionId
     );
     Database.executeBatch(nextBatch);
+
     Logger.saveLog();
   }
 
@@ -93,8 +111,8 @@ public with sharing class GroupStageGeneratorBatch implements Database.Batchable
     Integer groupSize = TournamentConfigurationUtility.getDefaultMaxTeamsPerGroup(); // Number of teams per group
     Integer numberOfGroups = TournamentConfigurationUtility.getDefaultMaxGroups(); // Total number of groups
 
-    // Define the matchups for each round
-    Integer[][] roundMatchups = new List<Integer[]>{
+    // Matchups for each round
+    Integer[][] groupMatchups = new List<Integer[]>{
       new List<Integer>{ 0, 1 },
       new List<Integer>{ 2, 3 }, // Round 1
       new List<Integer>{ 0, 2 },
@@ -105,6 +123,7 @@ public with sharing class GroupStageGeneratorBatch implements Database.Batchable
 
     // Divide the teams into groups
     for (Integer groupIndex = 0; groupIndex < numberOfGroups; groupIndex++) {
+      // Chunk of teams for a group
       List<Tournament_Team__c> groupTeams = new List<Tournament_Team__c>();
       for (Integer i = 0; i < groupSize; i++) {
         groupTeams.add(tournamentTeams[groupIndex * groupSize + i]);
@@ -114,17 +133,16 @@ public with sharing class GroupStageGeneratorBatch implements Database.Batchable
       Datetime round1Date = Datetime.now().addDays(1);
       Datetime round2Date = round1Date.addDays(5);
       Datetime round3Date = round2Date.addDays(5);
-
-      // Define the dates for each round
       Datetime[] roundDates = new List<Datetime>{
         round1Date,
         round2Date,
         round3Date
       };
+
       // Generate matches for each round
       for (Integer matchup = 0; matchup < 6; matchup++) {
-        Integer homeTeamIndex = roundMatchups[matchup][0];
-        Integer awayTeamIndex = roundMatchups[matchup][1];
+        Integer homeTeamIndex = groupMatchups[matchup][0];
+        Integer awayTeamIndex = groupMatchups[matchup][1];
         Match__c match = new Match__c(
           Tournament__c = this.tournamentId,
           Home_Team__c = groupTeams[homeTeamIndex].Team__c,

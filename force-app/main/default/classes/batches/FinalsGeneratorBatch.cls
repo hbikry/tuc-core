@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-08-2024
+ * @last modified on  : 12-09-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class FinalsGeneratorBatch implements Database.Batchable<SObject>, Database.Stateful {
@@ -14,6 +14,12 @@ public with sharing class FinalsGeneratorBatch implements Database.Batchable<SOb
     this.originalTransactionId = loggerTransactionId;
   }
 
+  /**
+   * @description : Batch start -> retrieve semi-finals matches
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param bc
+   * @return List<SObject>
+   **/
   public List<SObject> start(Database.BatchableContext bc) {
     List<Match__c> semiFinalsMatches = [
       SELECT Id, Home_Team__c, Away_Team__c, Winner_Team__c
@@ -31,9 +37,14 @@ public with sharing class FinalsGeneratorBatch implements Database.Batchable<SOb
     return semiFinalsMatches;
   }
 
+  /**
+   * @description : Batch execute -> Generate third-place and final matches
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param bc
+   * @param scope
+   **/
   public void execute(Database.BatchableContext bc, List<SObject> scope) {
     Logger.setParentLogTransactionId(this.originalTransactionId);
-    Logger.info('Executing semi-finals batch generator', scope);
     Savepoint savePoint = Database.setSavepoint();
     try {
       List<Match__c> semiFinalsMatches = (List<Match__c>) scope;
@@ -52,6 +63,11 @@ public with sharing class FinalsGeneratorBatch implements Database.Batchable<SOb
     }
   }
 
+  /**
+   * @description : Batch finish -> Log job record
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param bc
+   **/
   public void finish(Database.BatchableContext bc) {
     AsyncApexJob job = [
       SELECT
@@ -65,11 +81,18 @@ public with sharing class FinalsGeneratorBatch implements Database.Batchable<SOb
       WHERE Id = :bc.getJobId()
       WITH USER_MODE
     ];
+
     Logger.setParentLogTransactionId(this.originalTransactionId);
     Logger.info('Finals generator batch finished', job);
     Logger.saveLog();
   }
 
+  /**
+   * @description : Generate & insert third place match
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param semiFinalsMatches
+   * @return Match__c
+   **/
   private Match__c generateThirdPlaceMatch(List<Match__c> semiFinalsMatches) {
     List<Id> loserTeamIds = new List<Id>();
     for (Match__c semiFinalMatch : semiFinalsMatches) {
@@ -94,6 +117,12 @@ public with sharing class FinalsGeneratorBatch implements Database.Batchable<SOb
     return thirdPlaceMatch;
   }
 
+  /**
+   * @description : Generate & insert final match
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param semiFinalsMatches
+   * @return Match__c
+   **/
   private Match__c generateFinalMatch(List<Match__c> semiFinalsMatches) {
     Match__c finalMatch = new Match__c(
       Tournament__c = this.tournamentId,
