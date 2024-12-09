@@ -2,7 +2,7 @@
  * @description       : Tournament team trigger handler (beforeInsert, beforeUpdate)
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 11-26-2024
+ * @last modified on  : 12-09-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public without sharing class TournamentTeamTriggerHandler extends TriggerHandler {
@@ -15,11 +15,31 @@ public without sharing class TournamentTeamTriggerHandler extends TriggerHandler
   }
 
   public override void beforeInsert() {
-    validate();
+    Logger.info(
+      'Tournament_Team__c before insert trigger started',
+      this.newList
+    );
+    try {
+      validate();
+    } catch (Exception e) {
+      Logger.error('Tournament_Team__c before insert trigger error', e);
+    } finally {
+      Logger.saveLog();
+    }
   }
 
   public override void beforeUpdate() {
-    validate();
+    Logger.info(
+      'Tournament_Team__c before update trigger started',
+      this.newList
+    );
+    try {
+      validate();
+    } catch (Exception e) {
+      Logger.error('Tournament_Team__c before update trigger error', e);
+    } finally {
+      Logger.saveLog();
+    }
   }
 
   /**

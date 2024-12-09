@@ -2,7 +2,7 @@
  * @description       : Utility class for Match object
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-08-2024
+ * @last modified on  : 12-09-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class MatchUtility {
@@ -92,6 +92,47 @@ public with sharing class MatchUtility {
       match.Away_Team__c +
       '-' +
       match.Home_Team__c;
+  }
+
+  /**
+   * @description : Calculates the draw for the match
+   * @author hbikry@salesforce.com | 11-26-2024
+   * @param match
+   **/
+  public static void calculateDraw(Match__c match) {
+    // If is a knockout stage match set as draw as false
+    // Else if home team and away team goals equal set draw as true
+    // Else set draw as false
+    match.Draw__c = MatchUtility.isKnockoutStageMatch(match)
+      ? false
+      : (match.Home_Team_Goals__c == match.Away_Team_Goals__c);
+  }
+
+  /**
+   * @description : Calculate winner team for match
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @param match
+   **/
+  public static void calculateWinnerTeam(Match__c match) {
+    // If home teams goals gt away team goals -> set home team as winner
+    if (match.Home_Team_Goals__c > match.Away_Team_Goals__c) {
+      match.Winner_Team__c = match.Home_Team__c;
+      return;
+    }
+
+    // If home team lt away team goals -> set away team as winner
+    if (match.Home_Team_Goals__c < match.Away_Team_Goals__c) {
+      match.Winner_Team__c = match.Away_Team__c;
+      return;
+    }
+
+    // If score is equal and is group stage match
+    if (MatchUtility.isGroupStageMatch(match)) {
+      match.Winner_Team__c = null;
+      return;
+    }
+
+    // Else: knockout stage matches require manual selection for winner
   }
 
   /**
