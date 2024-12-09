@@ -13,7 +13,7 @@ public with sharing class BeforeMatchTriggerHandler {
   // Set for related tournament ids
   private Set<Id> tournamentIds = new Set<Id>();
   // List of related tournaments
-  private List<Tournament__c> tournaments = new List<Tournament__c>();
+  private Map<Id, Tournament__c> tournaments = new Map<Id, Tournament__c>();
   // List of related tournament teams
   private List<Tournament_Team__c> tournamentTeams = new List<Tournament_Team__c>();
   // For each related tournament, map group by team Map<tournamentId, Map<teamId, groupName>>
@@ -83,6 +83,9 @@ public with sharing class BeforeMatchTriggerHandler {
    * @param match
    **/
   public void validateRecord(Match__c match) {
+    // Check knockout stage match
+    checkTournamentStage(match);
+
     // Check for duplicate match
     checkDuplicateMatch(match);
     // add new match record to unique set
@@ -108,6 +111,30 @@ public with sharing class BeforeMatchTriggerHandler {
 
     // Check winner team on draw ko stage match
     checkWinnerTeam(match);
+  }
+
+  private void checkTournamentStage(Match__c match) {
+    if (
+      MatchUtility.isGroupStageMatch(match) &&
+      TournamentStageUtility.tournamentInKnockoutStage(
+        this.tournaments.get(match.Tournament__c)
+      )
+    ) {
+      match.addError(
+        'Cannot add/update group stage match while tournament in knockout stage'
+      );
+    }
+
+    if (
+      MatchUtility.isKnockoutStageMatch(match) &&
+      TournamentStageUtility.tournamentInGroupStage(
+        this.tournaments.get(match.Tournament__c)
+      )
+    ) {
+      match.addError(
+        'Cannot add/update knockout stage match while tournament in group stage'
+      );
+    }
   }
 
   /**

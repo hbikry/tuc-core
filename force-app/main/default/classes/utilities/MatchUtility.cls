@@ -2,7 +2,7 @@
  * @description       : Utility class for Match object
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-09-2024
+ * @last modified on  : 12-10-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class MatchUtility {
@@ -305,5 +305,29 @@ public with sharing class MatchUtility {
     match.Winner_Team__c = (Id) ListUtils.pickRandomObject(
       new List<Id>{ match.Home_Team__c, match.Away_Team__c }
     );
+  }
+
+  public static Map<Id, Integer> getCountByTournamentsMap(
+    Set<Id> tournamentIds,
+    List<String> stages
+  ) {
+    List<AggregateResult> aggResList = [
+      SELECT Tournament__c, count(Id) recordCount
+      FROM Match__c
+      WHERE Tournament__c IN :tournamentIds AND Stage__c IN :stages
+      WITH USER_MODE
+      GROUP BY Tournament__c
+    ];
+
+    Map<Id, Integer> countByTournaments = new Map<Id, Integer>();
+
+    for (AggregateResult aggRes : aggResList) {
+      countByTournaments.put(
+        (Id) aggRes.get('Tournament__c'),
+        (Integer) aggRes.get('recordCount')
+      );
+    }
+
+    return countByTournaments;
   }
 }

@@ -2,7 +2,7 @@
  * @description       : After trigger handler for Match__c records
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-09-2024
+ * @last modified on  : 12-10-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class AfterMatchTriggerHandler {
@@ -11,7 +11,7 @@ public with sharing class AfterMatchTriggerHandler {
   // Set for related tournament ids
   private Set<Id> tournamentIds = new Set<Id>();
   // List of related tournaments
-  private List<Tournament__c> tournaments = new List<Tournament__c>();
+  private Map<Id, Tournament__c> tournaments = new Map<Id, Tournament__c>();
   // List of related tournament teams
   private List<Tournament_Team__c> tournamentTeams = new List<Tournament_Team__c>();
   // For each related tournament, map tournament team by team Map<tournamentId, Map<teamId, Tournament_Team__c>>
@@ -49,6 +49,8 @@ public with sharing class AfterMatchTriggerHandler {
       eliminateKnockedOutTeam(match);
       setChampion(match);
     }
+
+    updateTournamentStage();
 
     update as user this.tournamentTeamsToUpdateMap.values();
     update as user this.tournamentsToUpdate;
@@ -137,6 +139,43 @@ public with sharing class AfterMatchTriggerHandler {
     this.tournamentsToUpdate.add(tournament);
   }
 
+  private void updateTournamentStage() {
+    Map<Id, Integer> getCountByTournamentsMap = MatchUtility.getCountByTournamentsMap(
+      this.tournamentIds,
+      StageUtility.GROUP_STAGES
+    );
+
+    for (Id tournamentId : this.tournamentIds) {
+      // If already on knockout stage, skip
+      if (
+        TournamentStageUtility.tournamentInKnockoutStage(
+          this.tournaments.get(tournamentId)
+        )
+      ) {
+        continue;
+      }
+
+      Integer groupMatchesCount = getCountByTournamentsMap.get(tournamentId);
+
+      // If group stage not yet finished, skip
+      if (
+        groupMatchesCount !=
+        TournamentConfigurationUtility.getMaxMatchesInGroupStage()
+      ) {
+        continue;
+      }
+
+      // group stage finished -> update tournament stage to knockout stage
+
+      this.tournamentsToUpdate.add(
+        new Tournament__c(
+          Id = tournamentId,
+          Stage__c = TournamentStageUtility.KNOCKOUT_STAGE
+        )
+      );
+    }
+  }
+
   /**
    * @description : Populate utility maps and lists
    * @author hbikry@salesforce.com | 12-09-2024
@@ -146,7 +185,7 @@ public with sharing class AfterMatchTriggerHandler {
     this.tournamentIds = MatchUtility.getRelatedTournamentIds(this.newList);
 
     // Retrieve related tournaments
-    //Map<Id, Tournament__c> tournaments = TournamentUtility.getTournaments(tournamentIds);
+    this.tournaments = TournamentUtility.getTournaments(tournamentIds);
 
     // Retrieve related tournament team records
     this.tournamentTeams = TournamentTeamUtility.getOverviewTournamentTeams(

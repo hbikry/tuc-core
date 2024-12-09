@@ -2,7 +2,7 @@
  * @description       : Utility class for Tournament Configuration Custom Setting
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-07-2024
+ * @last modified on  : 12-09-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class TournamentConfigurationUtility {
@@ -49,7 +49,7 @@ public with sharing class TournamentConfigurationUtility {
    * @author hbikry@salesforce.com | 12-07-2024
    * @return Integer
    **/
-  public static Integer getDefaultMaxMatchesByGroup() {
+  public static Integer getDefaultMaxMatchesPerGroup() {
     return (Integer) getDefaultMaxGroupMatchesPerTeam() *
       getDefaultMaxTeamsPerGroup() /
       2;
@@ -61,8 +61,17 @@ public with sharing class TournamentConfigurationUtility {
    * @return Integer
    **/
   public static Integer getDefaultMaxMatchesPerRound() {
-    return (Integer) getDefaultMaxMatchesByGroup() /
+    return (Integer) getDefaultMaxMatchesPerGroup() /
       StageUtility.GROUP_STAGES.size() *
       getDefaultMaxGroups();
+  }
+
+  /**
+   * @description : Calculate max matches in group stage (8 * 6 = 48)
+   * @author hbikry@salesforce.com | 12-09-2024
+   * @return Integer
+   **/
+  public static Integer getMaxMatchesInGroupStage() {
+    return (Integer) getDefaultMaxGroups() * getDefaultMaxMatchesPerGroup();
   }
 }
