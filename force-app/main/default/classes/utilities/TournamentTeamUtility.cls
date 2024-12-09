@@ -2,7 +2,7 @@
  * @description       : Utility class for Tournament Team object
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-08-2024
+ * @last modified on  : 12-09-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class TournamentTeamUtility {
@@ -152,30 +152,6 @@ public with sharing class TournamentTeamUtility {
 
     if (!eliminationByTeamMap.get(tournamentId).containsKey(teamId)) {
       eliminationByTeamMap.get(tournamentId).put(teamId, eliminated);
-    }
-  }
-
-  /**
-   * @description : Increment the elimination count by tournament
-   * @author hbikry@salesforce.com | 11-26-2024
-   * @param tournamentTeam
-   * @param eliminationCountMap
-   **/
-  public static void incrementEliminationsByTeamMap(
-    Tournament_Team__c tournamentTeam,
-    Map<Id, Integer> eliminationCountMap
-  ) {
-    Id tournamentId = tournamentTeam.Tournament__c;
-
-    if (!eliminationCountMap.containsKey(tournamentId)) {
-      eliminationCountMap.put(tournamentId, 0);
-    }
-
-    if (tournamentTeam.Eliminated__c == true) {
-      eliminationCountMap.put(
-        tournamentId,
-        eliminationCountMap.get(tournamentId) + 1
-      );
     }
   }
 
