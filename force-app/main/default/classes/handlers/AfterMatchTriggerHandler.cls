@@ -16,10 +16,12 @@ public with sharing class AfterMatchTriggerHandler {
   private List<Tournament_Team__c> tournamentTeams = new List<Tournament_Team__c>();
   // For each related tournament, map tournament team by team Map<tournamentId, Map<teamId, Tournament_Team__c>>
   Map<Id, Map<Id, Tournament_Team__c>> tournamentTeamsByTeamMap = new Map<Id, Map<Id, Tournament_Team__c>>();
+  // Map for ranked tournament teams by group Map<tournamentId, Map<groupName, List<Tournament_Team__c>>>
+  Map<Id, Map<String, List<Tournament_Team__c>>> rankedTeamsByGroup = new Map<Id, Map<String, List<Tournament_Team__c>>>();
   // Map for tournament teams to update Map<tournamentId, Tournament_Team__c
   Map<Id, Tournament_Team__c> tournamentTeamsToUpdateMap = new Map<Id, Tournament_Team__c>();
-  // List of tournaments to update
-  List<Tournament__c> tournamentsToUpdate = new List<Tournament__c>();
+  // Map for tournaments to update Map<tournamentId, Tournament__c>
+  Map<Id, Tournament__c> tournamentsToUpdateMap = new Map<Id, Tournament__c>();
 
   public AfterMatchTriggerHandler() {
     newList = (List<Match__c>) Trigger.new;
@@ -45,15 +47,23 @@ public with sharing class AfterMatchTriggerHandler {
     matches.sort(new MatchStageComparator());
 
     for (Match__c match : matches) {
+      // Update tournament team stats each group stage match
       updateGroupStats(match);
+      // Mark loser team as eliminated in knockout stage matches
       eliminateKnockedOutTeam(match);
+      // Set tournament champion on final match
       setChampion(match);
     }
 
-    updateTournamentStage();
+    concludeGroupStage();
 
+    Logger.info(
+      'tournament teams to update',
+      this.tournamentTeamsToUpdateMap.values()
+    );
+    Logger.info('tournaments to update', this.tournamentsToUpdateMap.values());
+    update as user this.tournamentsToUpdateMap.values();
     update as user this.tournamentTeamsToUpdateMap.values();
-    update as user this.tournamentsToUpdate;
   }
 
   /**
@@ -107,17 +117,25 @@ public with sharing class AfterMatchTriggerHandler {
       .get(match.Away_Team__c);
 
     if (match.Winner_Team__c == match.Home_Team__c) {
-      this.tournamentTeamsToUpdateMap.put(
-        match.Away_Team__c,
-        new Tournament_Team__c(Id = awayTournamentTeam.Id, Eliminated__c = true)
+      Tournament_Team__c tournamentTeamToUpdate = this.getTournamentTeamToUpdate(
+        awayTournamentTeam.Id
       );
+      tournamentTeamToUpdate.Eliminated__c = true;
+      // this.tournamentTeamsToUpdateMap.put(
+      //   awayTournamentTeam.Id,
+      //   tournamentTeamToUpdate
+      // );
     }
 
     if (match.Winner_Team__c == match.Away_Team__c) {
-      this.tournamentTeamsToUpdateMap.put(
-        match.Home_Team__c,
-        new Tournament_Team__c(Id = homeTournamentTeam.Id, Eliminated__c = true)
+      Tournament_Team__c tournamentTeamToUpdate = this.getTournamentTeamToUpdate(
+        homeTournamentTeam.Id
       );
+      tournamentTeamToUpdate.Eliminated__c = true;
+      // this.tournamentTeamsToUpdateMap.put(
+      //   homeTournamentTeam.Id,
+      //   tournamentTeamToUpdate
+      // );
     }
   }
 
@@ -131,22 +149,22 @@ public with sharing class AfterMatchTriggerHandler {
       return;
     }
 
-    Tournament__c tournament = new Tournament__c(
-      Id = match.Tournament__c,
-      Champion__c = match.Winner_Team__c
-    );
+    Id tournamentId = match.Tournament__c;
 
-    this.tournamentsToUpdate.add(tournament);
+    Tournament__c tournament = getTournamentToUpdate(tournamentId);
+    tournament.Champion__c = match.Winner_Team__c;
+
+    this.tournamentsToUpdateMap.put(tournamentId, tournament);
   }
 
-  private void updateTournamentStage() {
+  private void concludeGroupStage() {
     Map<Id, Integer> getCountByTournamentsMap = MatchUtility.getCountByTournamentsMap(
       this.tournamentIds,
       StageUtility.GROUP_STAGES
     );
 
     for (Id tournamentId : this.tournamentIds) {
-      // If already on knockout stage, skip
+      // If tournament on knockout stage, skip
       if (
         TournamentStageUtility.tournamentInKnockoutStage(
           this.tournaments.get(tournamentId)
@@ -165,14 +183,49 @@ public with sharing class AfterMatchTriggerHandler {
         continue;
       }
 
-      // group stage finished -> update tournament stage to knockout stage
+      // Update tournament stage to knockout stage
+      Tournament__c tournamentToUpdate = getTournamentToUpdate(tournamentId);
+      tournamentToUpdate.Stage__c = TournamentStageUtility.KNOCKOUT_STAGE;
+      this.tournamentsToUpdateMap.put(tournamentId, tournamentToUpdate);
 
-      this.tournamentsToUpdate.add(
-        new Tournament__c(
-          Id = tournamentId,
-          Stage__c = TournamentStageUtility.KNOCKOUT_STAGE
-        )
-      );
+      // For each tournament eliminate bottom teams
+      //eliminateBottomTeams(tournamentId);
+    }
+  }
+
+  private void eliminateBottomTeams(Id tournamentId) {
+    for (
+      String groupName : this.rankedTeamsByGroup.get(tournamentId).keySet()
+    ) {
+      List<Tournament_Team__c> rankedGroupTeams = this.rankedTeamsByGroup
+        .get(tournamentId)
+        .get(groupName);
+
+      if (
+        rankedGroupTeams.size() !=
+        TournamentConfigurationUtility.getDefaultMaxTeamsPerGroup()
+      ) {
+        throw new IllegalArgumentException(
+          'Expected tournament team list of size ' +
+          TournamentConfigurationUtility.getDefaultMaxTeamsPerGroup()
+        );
+      }
+
+      for (
+        Integer i = rankedGroupTeams.size() - 1;
+        i >= rankedGroupTeams.size() / 2;
+        i--
+      ) {
+        Id tournamentTeamId = rankedGroupTeams[i].Id;
+        Tournament_Team__c tournamentTeamToUpdate = this.getTournamentTeamToUpdate(
+          rankedGroupTeams[i].Id
+        );
+        tournamentTeamToUpdate.Eliminated__c = true;
+        // this.tournamentTeamsToUpdateMap.put(
+        //   tournamentTeamId,
+        //   tournamentTeamToUpdate
+        // );
+      }
     }
   }
 
@@ -192,18 +245,35 @@ public with sharing class AfterMatchTriggerHandler {
       this.tournamentIds
     );
 
-    // populate tournament teams by team map
+    // populate tournament teams util maps
     for (Tournament_Team__c tournamentTeam : this.tournamentTeams) {
       Id tournamentId = tournamentTeam.Tournament__c;
-      if (!tournamentTeamsByTeamMap.containsKey(tournamentId)) {
-        this.tournamentTeamsByTeamMap.put(
-          tournamentId,
-          new Map<Id, Tournament_Team__c>()
-        );
-      }
 
-      this.tournamentTeamsByTeamMap.get(tournamentId)
-        .put(tournamentTeam.Team__c, tournamentTeam);
+      TournamentTeamUtility.addRecordToMapByTeam(
+        tournamentTeam,
+        this.tournamentTeamsByTeamMap
+      );
+      TournamentTeamUtility.addRecordToRankedTeamsByGroupMap(
+        tournamentTeam,
+        this.rankedTeamsByGroup
+      );
     }
+  }
+
+  private Tournament__c getTournamentToUpdate(Id tournamentId) {
+    return this.tournamentsToUpdateMap.containsKey(tournamentId)
+      ? this.tournamentsToUpdateMap.get(tournamentId)
+      : new Tournament__c(Id = tournamentId);
+  }
+
+  private Tournament_Team__c getTournamentTeamToUpdate(Id tournamentTeamId) {
+    if (!this.tournamentTeamsToUpdateMap.containsKey(tournamentTeamId)) {
+      this.tournamentTeamsToUpdateMap.put(
+        tournamentTeamId,
+        new Tournament_Team__c(Id = tournamentTeamId)
+      );
+    }
+
+    return this.tournamentTeamsToUpdateMap.get(tournamentTeamId);
   }
 }

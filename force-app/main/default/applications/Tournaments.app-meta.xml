@@ -12,7 +12,6 @@
     <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
     <label>Tournaments</label>
     <navType>Standard</navType>
-    <tabs>standard-home</tabs>
     <tabs>Knockout_Stage</tabs>
     <tabs>Group_Stage</tabs>
     <tabs>Tournament__c</tabs>
@@ -21,6 +20,7 @@
     <tabs>Match__c</tabs>
     <tabs>standard-report</tabs>
     <tabs>standard-Dashboard</tabs>
+    <tabs>Log__c</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>Tournaments_UtilityBar</utilityBar>
 </CustomApplication>

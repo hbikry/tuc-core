@@ -2,7 +2,7 @@
  * @description       : Before trigger handler for Match__c records
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-09-2024
+ * @last modified on  : 12-10-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class BeforeMatchTriggerHandler {
@@ -26,6 +26,10 @@ public with sharing class BeforeMatchTriggerHandler {
   private Map<Id, Map<String, Datetime>> lastMatchDateByStageMap = new Map<Id, Map<String, Datetime>>();
   // Set for unique match keys
   private Set<String> uniqueMatchesSet = new Set<String>();
+  // For each related tournament, map first place team by group Map<tournamentId, Map<gourpName, teamId>>
+  Map<Id, Map<String, Id>> topTeamByGroupMap = new Map<Id, Map<String, Id>>();
+  // For each related tournament, map winner of round of 16 matches Map<tournamentId, Map<teamId, matchId>>
+  Map<Id, Map<Id, Id>> roundOf16MatchesByWinner = new Map<Id, Map<Id, Id>>();
 
   public BeforeMatchTriggerHandler() {
     newList = (List<Match__c>) Trigger.new;
@@ -74,6 +78,8 @@ public with sharing class BeforeMatchTriggerHandler {
       // Post record validation -> populate fields
       MatchUtility.calculateWinnerTeam(match);
       MatchUtility.calculateDraw(match);
+      calculateBracket(match);
+      setLinkedMatch(match);
     }
   }
 
@@ -342,6 +348,38 @@ public with sharing class BeforeMatchTriggerHandler {
     }
   }
 
+  private void calculateBracket(Match__c match) {
+    if (!MatchUtility.isKnockoutStageMatch(match)) {
+      return;
+    }
+
+    if (
+      MatchUtility.isThirdPlayPlayOffMatch(match) ||
+      MatchUtility.isFinalMatch(match)
+    ) {
+      return;
+    }
+
+    Id teamId = match.Winner_Team__c;
+    String groupName = this.groupsByTeamMap.get(match.Tournament__c)
+      .get(teamId);
+
+    match.Bracket__c = BracketUtility.calculateBracket(
+      groupName,
+      this.topTeamByGroupMap.get(match.Tournament__c).get(groupName) == teamId
+    );
+  }
+
+  private void setLinkedMatch(Match__c match) {
+    if (match.Stage__c != StageUtility.QUARTERFINAL_KO_STAGE) {
+      return;
+    }
+
+    match.Linked_Match__c = this.roundOf16MatchesByWinner
+      .get(match.Tournament__c)
+      .get(match.Winner_Team__c);
+  }
+
   /**
    * @description : Retrieve and check related tournaments & tournament teams not empty
    * @author hbikry@salesforce.com | 12-09-2024
@@ -357,7 +395,7 @@ public with sharing class BeforeMatchTriggerHandler {
       );
     }
 
-    this.tournamentTeams = TournamentTeamUtility.getRecordsByTournamentIds(
+    this.tournamentTeams = TournamentTeamUtility.getRankedTeams(
       this.tournamentIds
     );
 
@@ -374,16 +412,26 @@ public with sharing class BeforeMatchTriggerHandler {
     for (Tournament_Team__c tournamentTeam : this.tournamentTeams) {
       TournamentTeamUtility.addRecordToGroupsByTeamMap(
         tournamentTeam,
-        groupsByTeamMap
+        this.groupsByTeamMap
       );
       TournamentTeamUtility.addRecordToEliminationsByTeamMap(
         tournamentTeam,
-        eliminationByTeamMap
+        this.eliminationByTeamMap
+      );
+      TournamentTeamUtility.addRecordToTopTeamByGroupMap(
+        tournamentTeam,
+        this.topTeamByGroupMap
       );
     }
 
     List<Match__c> existingMatches = [
-      SELECT Tournament__c, Home_Team__c, Away_Team__c, Date__c, Stage__c
+      SELECT
+        Tournament__c,
+        Home_Team__c,
+        Away_Team__c,
+        Date__c,
+        Stage__c,
+        Winner_Team__c
       FROM Match__c
       WHERE Tournament__c IN :tournamentIds
       WITH USER_MODE
@@ -411,6 +459,13 @@ public with sharing class BeforeMatchTriggerHandler {
       match,
       this.lastMatchDateByStageMap
     );
+
+    if (match.Stage__c == StageUtility.ROUND_OF_16_KO_STAGE) {
+      MatchUtility.addRecordToMatchByWinnerMap(
+        match,
+        this.roundOf16MatchesByWinner
+      );
+    }
   }
 
   /**
@@ -428,5 +483,11 @@ public with sharing class BeforeMatchTriggerHandler {
       match,
       this.lastMatchDateByStageMap
     );
+    if (match.Stage__c == StageUtility.ROUND_OF_16_KO_STAGE) {
+      MatchUtility.removeRecordFromMatchByWinnerMap(
+        match,
+        this.roundOf16MatchesByWinner
+      );
+    }
   }
 }

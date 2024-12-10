@@ -2,7 +2,7 @@
  * @description       : Utility class for Tournament Team object
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-09-2024
+ * @last modified on  : 12-10-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class TournamentTeamUtility {
@@ -155,6 +155,12 @@ public with sharing class TournamentTeamUtility {
     }
   }
 
+  /**
+   * @description : Get all tournament teams data ordered by rank
+   * @author hbikry@salesforce.com | 12-10-2024
+   * @param tournamentIds
+   * @return List<Tournament_Team__c>
+   **/
   public static List<Tournament_Team__c> getOverviewTournamentTeams(
     Set<Id> tournamentIds
   ) {
@@ -180,6 +186,7 @@ public with sharing class TournamentTeamUtility {
       WHERE Tournament__c IN :tournamentIds
       WITH USER_MODE
       ORDER BY
+        Group__c ASC,
         Points__c DESC,
         Qualification_Points__c DESC,
         Goals_For__c DESC,
@@ -187,6 +194,29 @@ public with sharing class TournamentTeamUtility {
     ];
   }
 
+  public static void addRecordToMapByTeam(
+    Tournament_Team__c tournamentTeam,
+    Map<Id, Map<Id, Tournament_Team__c>> recordByTeamMap
+  ) {
+    Id tournamentId = tournamentTeam.Tournament__c;
+    Id teamId = tournamentTeam.Team__c;
+
+    if (!recordByTeamMap.containsKey(tournamentId)) {
+      recordByTeamMap.put(tournamentId, new Map<Id, Tournament_Team__c>());
+    }
+
+    if (!recordByTeamMap.get(tournamentId).containsKey(teamId)) {
+      recordByTeamMap.get(tournamentId).put(teamId, tournamentTeam);
+    }
+  }
+
+  /**
+   * @description : Update related tournament teams stats from match result
+   * @author hbikry@salesforce.com | 12-10-2024
+   * @param match
+   * @param homeTeam
+   * @param awayTeam
+   **/
   public static void updateMatchTeamsStats(
     Match__c match,
     Tournament_Team__c homeTeam,
@@ -214,6 +244,14 @@ public with sharing class TournamentTeamUtility {
     }
   }
 
+  /**
+   * @description : Get updated related tournament teams stats from match result
+   * @author hbikry@salesforce.com | 12-10-2024
+   * @param match
+   * @param homeTeam
+   * @param awayTeam
+   * @return List<Tournament_Team__c>
+   **/
   public static List<Tournament_Team__c> getUpdatedTournamentTeamStats(
     Match__c match,
     Tournament_Team__c homeTeam,
@@ -239,5 +277,58 @@ public with sharing class TournamentTeamUtility {
         Draws__c = awayTeam.Draws__c
       )
     };
+  }
+
+  public static List<Tournament_Team__c> getRankedTeams(Set<Id> tournamentIds) {
+    return [
+      SELECT Id, Tournament__c, Team__c, Group__c, Eliminated__c
+      FROM Tournament_Team__c
+      WHERE Tournament__c IN :tournamentIds
+      WITH USER_MODE
+      ORDER BY
+        Group__c ASC,
+        Points__c DESC,
+        Qualification_Points__c DESC,
+        Goals_For__c DESC,
+        Goals_Against__c ASC
+    ];
+  }
+
+  public static void addRecordToRankedTeamsByGroupMap(
+    Tournament_Team__c tournamentTeam,
+    Map<Id, Map<String, List<Tournament_Team__c>>> rankedTeamsByGroupMap
+  ) {
+    Id tournamentId = tournamentTeam.Tournament__c;
+    String groupName = tournamentTeam.Group__c;
+
+    if (!rankedTeamsByGroupMap.containsKey(tournamentId)) {
+      rankedTeamsByGroupMap.put(
+        tournamentId,
+        new Map<String, List<Tournament_Team__c>>()
+      );
+    }
+
+    if (!rankedTeamsByGroupMap.get(tournamentId).containsKey(groupName)) {
+      rankedTeamsByGroupMap.get(tournamentId)
+        .put(groupName, new List<Tournament_Team__c>());
+    }
+
+    rankedTeamsByGroupMap.get(tournamentId).get(groupName).add(tournamentTeam);
+  }
+
+  public static void addRecordToTopTeamByGroupMap(
+    Tournament_Team__c tournamentTeam,
+    Map<Id, Map<String, Id>> topTeamByGroup
+  ) {
+    Id tournamentId = tournamentTeam.Tournament__c;
+    String groupName = tournamentTeam.Group__c;
+
+    if (!topTeamByGroup.containsKey(tournamentId)) {
+      topTeamByGroup.put(tournamentId, new Map<String, Id>());
+    }
+
+    if (!topTeamByGroup.get(tournamentId).containsKey(groupName)) {
+      topTeamByGroup.get(tournamentId).put(groupName, tournamentTeam.Team__c);
+    }
   }
 }

@@ -46,6 +46,10 @@ public with sharing class MatchUtility {
     return match.Stage__c == StageUtility.THIRD_PLACE_KO_STAGE;
   }
 
+  public static Boolean isFinalMatch(Match__c match) {
+    return match.Stage__c == StageUtility.FINAL_KO_STAGE;
+  }
+
   /**
    * @description : Checks if the match is duplicated in the tournament
    * @author hbikry@salesforce.com | 11-26-2024
@@ -285,7 +289,10 @@ public with sharing class MatchUtility {
       FROM Match__c
       WHERE Tournament__c = :tournamentId AND Stage__c IN :stages
       WITH USER_MODE
-      ORDER BY Date__c ASC
+      ORDER BY
+        Bracket__c ASC NULLS LAST,
+        Date__c ASC,
+        Linked_Match__r.Date__c ASC
     ];
   }
 
@@ -329,5 +336,39 @@ public with sharing class MatchUtility {
     }
 
     return countByTournaments;
+  }
+
+  public static void addRecordToMatchByWinnerMap(
+    Match__c match,
+    Map<Id, Map<Id, Id>> matchByWinnerMap
+  ) {
+    Id tournamentId = match.Tournament__c;
+    Id winnerTeamId = match.Winner_Team__c;
+
+    if (!matchByWinnerMap.containsKey(tournamentId)) {
+      matchByWinnerMap.put(tournamentId, new Map<Id, Id>());
+    }
+
+    if (!matchByWinnerMap.get(tournamentId).containsKey(winnerTeamId)) {
+      matchByWinnerMap.get(tournamentId).put(winnerTeamId, match.Id);
+    }
+  }
+
+  public static void removeRecordFromMatchByWinnerMap(
+    Match__c match,
+    Map<Id, Map<Id, Id>> matchByWinnerMap
+  ) {
+    Id tournamentId = match.Tournament__c;
+    Id winnerTeamId = match.Winner_Team__c;
+
+    if (!matchByWinnerMap.containsKey(tournamentId)) {
+      return;
+    }
+
+    if (!matchByWinnerMap.get(tournamentId).containsKey(winnerTeamId)) {
+      return;
+    }
+
+    matchByWinnerMap.get(tournamentId).remove(winnerTeamId);
   }
 }
