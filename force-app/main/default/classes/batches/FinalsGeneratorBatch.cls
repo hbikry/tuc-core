@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-09-2024
+ * @last modified on  : 12-10-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class FinalsGeneratorBatch implements Database.Batchable<SObject>, Database.Stateful {
@@ -28,6 +28,7 @@ public with sharing class FinalsGeneratorBatch implements Database.Batchable<SOb
         Tournament__c = :this.tournamentId
         AND Stage__c = :StageUtility.SEMIFINAL_KO_STAGE
       WITH USER_MODE
+      ORDER BY Date__c ASC
     ];
 
     Logger.setParentLogTransactionId(this.originalTransactionId);

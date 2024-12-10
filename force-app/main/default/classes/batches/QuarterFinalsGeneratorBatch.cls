@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-09-2024
+ * @last modified on  : 12-10-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class QuarterFinalsGeneratorBatch implements Database.Batchable<SObject>, Database.Stateful {
@@ -31,6 +31,7 @@ public with sharing class QuarterFinalsGeneratorBatch implements Database.Batcha
         Tournament__c = :this.tournamentId
         AND Stage__c = :StageUtility.ROUND_OF_16_KO_STAGE
       WITH USER_MODE
+      ORDER BY Bracket__c ASC NULLS LAST, Date__c ASC
     ];
 
     Logger.setParentLogTransactionId(this.originalTransactionId);
@@ -50,10 +51,9 @@ public with sharing class QuarterFinalsGeneratorBatch implements Database.Batcha
     Logger.setParentLogTransactionId(this.originalTransactionId);
     Savepoint savePoint = Database.setSavepoint();
     try {
-      List<Match__c> roundOf16Matches = (List<Match__c>) scope;
       // Generate quarter-finals stage matches
       List<Match__c> quarterFinalsMatches = generateQuarteFinalsMatches(
-        roundOf16Matches
+        (List<Match__c>) scope
       );
       Logger.info('Quarter-finals matches generated', quarterFinalsMatches);
     } catch (Exception e) {

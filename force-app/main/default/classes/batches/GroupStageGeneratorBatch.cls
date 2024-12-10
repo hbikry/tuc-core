@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-09-2024
+ * @last modified on  : 12-10-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class GroupStageGeneratorBatch implements Database.Batchable<SObject>, Database.Stateful {
@@ -48,11 +48,9 @@ public with sharing class GroupStageGeneratorBatch implements Database.Batchable
     Logger.setParentLogTransactionId(this.originalTransactionId);
     Savepoint savePoint = Database.setSavepoint();
     try {
-      List<Tournament_Team__c> tournamentTeams = (List<Tournament_Team__c>) scope;
-
       // Generate group stage matches
       List<Match__c> groupStageMatches = generateGroupStageMatches(
-        tournamentTeams
+        (List<Tournament_Team__c>) scope
       );
       Logger.info('Group stage matches generated', groupStageMatches);
     } catch (Exception e) {

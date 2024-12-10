@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-09-2024
+ * @last modified on  : 12-10-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class RoundOf16GeneratorBatch implements Database.Batchable<SObject>, Database.Stateful {
@@ -15,19 +15,15 @@ public with sharing class RoundOf16GeneratorBatch implements Database.Batchable<
   }
 
   /**
-   * @description : Batch start -> Retrieve tournament teams
+   * @description : Batch start -> Retrieve tournament teams ordered by group and points
    * @author hbikry@salesforce.com | 12-09-2024
    * @param bc
    * @return List<SObject>
    **/
   public List<SObject> start(Database.BatchableContext bc) {
-    List<Tournament_Team__c> tournamentTeams = [
-      SELECT Team__c, Group__c
-      FROM Tournament_Team__c
-      WHERE Tournament__c = :this.tournamentId
-      WITH USER_MODE
-      ORDER BY Group__c ASC, Points__c DESC, Qualification_Points__c DESC
-    ];
+    List<Tournament_Team__c> tournamentTeams = TournamentTeamUtility.getRankedTeams(
+      new Set<Id>{ this.tournamentId }
+    );
 
     Logger.setParentLogTransactionId(this.originalTransactionId);
     Logger.info('Started round of 16 generator batch', tournamentTeams);
@@ -46,10 +42,9 @@ public with sharing class RoundOf16GeneratorBatch implements Database.Batchable<
     Logger.setParentLogTransactionId(this.originalTransactionId);
     Savepoint savePoint = Database.setSavepoint();
     try {
-      List<Tournament_Team__c> tournamentTeams = (List<Tournament_Team__c>) scope;
       // Generate round of 16 stage matches
       List<Match__c> roundOf16Matches = generateRoundOf16Matches(
-        tournamentTeams
+        (List<Tournament_Team__c>) scope
       );
       Logger.info('Round of 16 matches generated', roundOf16Matches);
     } catch (Exception e) {
@@ -103,7 +98,7 @@ public with sharing class RoundOf16GeneratorBatch implements Database.Batchable<
   ) {
     // Map to hold the top two teams from each group
     Map<String, List<Tournament_Team__c>> topTeamsByGroup = new Map<String, List<Tournament_Team__c>>();
-    // Loop over the records to determine the top two teams from each group
+    //Loop over the records to determine the top two teams from each group
     for (Tournament_Team__c tt : tournamentTeams) {
       if (!topTeamsByGroup.containsKey(tt.Group__c)) {
         topTeamsByGroup.put(tt.Group__c, new List<Tournament_Team__c>());
@@ -119,9 +114,9 @@ public with sharing class RoundOf16GeneratorBatch implements Database.Batchable<
 
     // Generate dates
     Datetime date1 = Datetime.now().addDays(15);
-    Datetime date2 = date1.addDays(1);
-    Datetime date3 = date2.addDays(1);
-    Datetime date4 = date3.addDays(1);
+    Datetime date2 = date1.addDays(2);
+    Datetime date3 = date1.addDays(1);
+    Datetime date4 = date2.addDays(1);
     Datetime[] dates = new List<Datetime>{ date1, date2, date3, date4 };
     Integer groupsSize = GroupUtility.GROUPS.size();
 
