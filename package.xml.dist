@@ -24,6 +24,8 @@
     <types>
         <members>TourmanetTeam_Before_Create_Update</members>
         <members>Match_Before_Create_Update</members>
+        <members>Delete_All_Tournament_Data</members>
+        <members>Tournament_Generator</members>
         <name>Flow</name>
     </types>
     <types>
