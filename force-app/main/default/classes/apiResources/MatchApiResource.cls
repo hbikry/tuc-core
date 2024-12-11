@@ -11,6 +11,7 @@ global with sharing class MatchApiResource {
   global static List<TournamentDTO.Match> handleGetRequests() {
     RestRequest req = RestContext.request;
     String[] uriParts = req.requestURI.split('/');
+    Logger.info('Request for api: ' + req.requestURI);
 
     try {
       String tournamentCode = uriParts[3];
