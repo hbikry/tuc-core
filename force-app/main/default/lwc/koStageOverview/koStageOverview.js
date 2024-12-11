@@ -5,6 +5,14 @@ export default class KoStageOverview extends LightningElement {
   @track _tournamentId = undefined;
   @track matchesByStage;
   @track error;
+  @api recordId;
+
+  connectedCallback() {
+    if (this.recordId != null) {
+      this._tournamentId = this.recordId;
+      this.fetchMatches();
+    }
+  }
 
   fetchMatches() {
     getMatchesOverview({ tournamentId: this._tournamentId })

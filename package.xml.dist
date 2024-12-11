@@ -45,5 +45,10 @@
         <members>TeamFlags</members>
         <name>StaticResource</name>
     </types>
+    <types>
+        <members>Tournament_Record_Page</members>
+        <members>Tournament_Overview</members>
+        <name>FlexiPage</name>
+    </types>
     <version>62.0</version>
 </Package>

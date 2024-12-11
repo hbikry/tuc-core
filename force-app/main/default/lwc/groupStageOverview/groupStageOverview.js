@@ -5,6 +5,14 @@ export default class GroupStageOverview extends LightningElement {
   @track _tournamentId = undefined;
   @track overviewByGroup;
   @track error;
+  @api recordId;
+
+  connectedCallback() {
+    if (this.recordId != null) {
+      this._tournamentId = this.recordId;
+      this.fetchOverview();
+    }
+  }
 
   fetchOverview() {
     getGroupStageOverview({ tournamentId: this._tournamentId })
