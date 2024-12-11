@@ -7,6 +7,9 @@
         <locationY>134</locationY>
         <actionName>DeleteTournamentDataController</actionName>
         <actionType>apex</actionType>
+        <connector>
+            <targetReference>Confirmation</targetReference>
+        </connector>
         <flowTransactionModel>Automatic</flowTransactionModel>
         <nameSegment>DeleteTournamentDataController</nameSegment>
         <offset>0</offset>
@@ -36,6 +39,23 @@
         </value>
     </processMetadataValues>
     <processType>Flow</processType>
+    <screens>
+        <name>Confirmation</name>
+        <label>Confirmation</label>
+        <locationX>176</locationX>
+        <locationY>242</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>Data_Deletion_Confirmation_Message</name>
+            <fieldText
+      >&lt;p&gt;All tournament data has been deleted.&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <showFooter>false</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
     <start>
         <locationX>50</locationX>
         <locationY>0</locationY>
