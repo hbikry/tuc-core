@@ -1,0 +1,21 @@
+<!--
+  @description       : 
+  @author            : hbikry@salesforce.com
+  @group             : 
+  @last modified on  : 12-11-2024
+  @last modified by  : hbikry@salesforce.com
+-->
+<template>
+  <div class="slds-scrollable_x scroll-container">
+    <div class="slds-grid slds-nowrap">
+      <template for:each={matchesByStage} for:item="item">
+        <c-stage-overview-item
+          key={item.stage}
+          stage={item.stage}
+          matches={item.matches}
+        >
+        </c-stage-overview-item>
+      </template>
+    </div>
+  </div>
+</template>

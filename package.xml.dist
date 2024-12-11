@@ -48,6 +48,7 @@
     <types>
         <members>Tournament_Record_Page</members>
         <members>Tournament_Overview</members>
+        <members>Team_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <version>62.0</version>

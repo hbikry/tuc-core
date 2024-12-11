@@ -1,0 +1,25 @@
+<!--
+  @description       : 
+  @author            : hbikry@salesforce.com
+  @group             : 
+  @last modified on  : 12-11-2024
+  @last modified by  : hbikry@salesforce.com
+-->
+<template>
+  <div class="slds-box slds-theme_default slds-m-around_medium">
+    <template lwc:if={ready}>
+      <lightning-tabset>
+        <template for:each={overviewByTournament} for:item="item">
+          <lightning-tab key={item.tournament} label={item.tournament}>
+            <c-team-matches
+              matches={item.overviewByTournament}
+            ></c-team-matches>
+          </lightning-tab>
+        </template>
+      </lightning-tabset>
+    </template>
+    <template lwc:elseif={hasError}>
+      <c-error-alert error-message={error}></c-error-alert>
+    </template>
+  </div>
+</template>
