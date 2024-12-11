@@ -15,6 +15,7 @@
         <members>Match__c</members>
         <members>Knockout_Stage</members>
         <members>Group_Stage</members>
+        <members>Tournament_Overview</members>
         <name>CustomTab</name>
     </types>
     <types>
