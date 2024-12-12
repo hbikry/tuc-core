@@ -2,19 +2,20 @@
   @description       : 
   @author            : hbikry@salesforce.com
   @group             : 
-  @last modified on  : 12-11-2024
+  @last modified on  : 12-12-2024
   @last modified by  : hbikry@salesforce.com
 -->
 <template>
   <div class="slds-scrollable_x scroll-container">
     <div class="slds-grid slds-nowrap">
       <template for:each={matchesByStage} for:item="item">
-        <c-stage-overview-item
+        <div
           key={item.stage}
-          stage={item.stage}
-          matches={item.matches}
+          class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3 stage-container"
         >
-        </c-stage-overview-item>
+          <c-stage-overview-item stage={item.stage} matches={item.matches}>
+          </c-stage-overview-item>
+        </div>
       </template>
     </div>
   </div>
