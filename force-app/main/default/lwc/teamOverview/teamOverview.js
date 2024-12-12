@@ -23,10 +23,6 @@ export default class TeamOverview extends LightningElement {
           }
         );
         this.error = undefined;
-        console.log("controller result: " + JSON.stringify(result));
-        console.log(
-          "transformed: " + JSON.stringify(this.overviewByTournament)
-        );
       })
       .catch((error) => {
         this.error = error;

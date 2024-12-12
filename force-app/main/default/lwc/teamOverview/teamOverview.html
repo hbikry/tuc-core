@@ -8,15 +8,19 @@
 <template>
   <div class="slds-theme_default slds-m-around_medium">
     <template lwc:if={ready}>
-      <lightning-tabset>
+      <lightning-accordion allow-multiple-sections-open>
         <template for:each={overviewByTournament} for:item="item">
-          <lightning-tab key={item.tournament} label={item.tournament}>
+          <lightning-accordion-section
+            key={item.tournament}
+            name={item.tournament}
+            label={item.tournament}
+          >
             <c-team-matches
               matches={item.overviewByTournament}
             ></c-team-matches>
-          </lightning-tab>
+          </lightning-accordion-section>
         </template>
-      </lightning-tabset>
+      </lightning-accordion>
     </template>
     <template lwc:elseif={hasError}>
       <c-error-alert error-message={error}></c-error-alert>

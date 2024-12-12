@@ -2,7 +2,7 @@
  * @description       :
  * @author            : hbikry@salesforce.com
  * @group             :
- * @last modified on  : 12-11-2024
+ * @last modified on  : 12-12-2024
  * @last modified by  : hbikry@salesforce.com
  **/
 public with sharing class TeamOverviewController {
@@ -18,6 +18,7 @@ public with sharing class TeamOverviewController {
         Stage__c,
         Date__c,
         Tournament__r.Code__c,
+        Tournament__r.Name,
         Home_Team__r.Id,
         Home_Team__r.Name,
         Home_Team__r.Code__c,
@@ -37,22 +38,17 @@ public with sharing class TeamOverviewController {
     ];
 
     for (Match__c match : matches) {
-      if (!overviewMap.containsKey(match.Tournament__r.Code__c)) {
-        overviewMap.put(
-          match.Tournament__r.Code__c,
-          new Map<String, List<MatchOverview>>()
-        );
+      String tournamentKey = match.Tournament__r.Name;
+      if (!overviewMap.containsKey(tournamentKey)) {
+        overviewMap.put(tournamentKey, new Map<String, List<MatchOverview>>());
       }
 
-      if (
-        !overviewMap.get(match.Tournament__r.Code__c)
-          .containsKey(match.Stage__c)
-      ) {
-        overviewMap.get(match.Tournament__r.Code__c)
+      if (!overviewMap.get(tournamentKey).containsKey(match.Stage__c)) {
+        overviewMap.get(tournamentKey)
           .put(match.Stage__c, new List<MatchOverview>());
       }
 
-      overviewMap.get(match.Tournament__r.Code__c)
+      overviewMap.get(tournamentKey)
         .get(match.Stage__c)
         .add(new MatchOverview(match));
     }
