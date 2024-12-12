@@ -1,9 +1,27 @@
 /*
  *  Flex Layout Specifics
 */
+.scrollable-container {
+  max-height: 600px; /* Adjust the height as needed */
+  max-width: 100%;
+  overflow: auto;
+}
+
 main {
   display: flex;
   flex-direction: row;
+}
+
+.team-flag {
+  width: 36px;
+  /* Fixed size for the flag */
+  height: 24px;
+  border: 1px;
+  border-style: solid;
+  float: left;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  margin-top: 5px;
 }
 
 .round {

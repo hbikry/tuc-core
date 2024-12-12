@@ -1,5 +1,6 @@
 import { LightningElement, api, track } from "lwc";
 import getMatchesOverview from "@salesforce/apex/KnockoutStageOverviewController.getMatchesOverview";
+import TEAM_FLAGS from "@salesforce/resourceUrl/TeamFlags";
 
 export default class KoStageOverview extends LightningElement {
   @track _tournamentId = undefined;
@@ -20,6 +21,17 @@ export default class KoStageOverview extends LightningElement {
         this.matchesByStage = Object.entries(result).map(([stage, matches]) => {
           return { stage, matches };
         });
+        this.matchesByStage.forEach((item) => {
+          item.matches.forEach((match) => {
+            match.homeTeamFlagUrl = this.getFlagUrl(match.homeTeamFlagCode);
+            match.awayTeamFlagUrl = this.getFlagUrl(match.awayTeamFlagCode);
+            match.isHomeTeamWinner = match.homeTeamId === match.winnerTeamId;
+            match.isAwayTeamWinner = match.awayTeamId === match.winnerTeamId;
+            match.homeTeamClass = `game game-top${match.isHomeTeamWinner ? " winner" : ""}`;
+            match.awayTeamClass = `game game-bottom${match.isAwayTeamWinner ? " winner" : ""}`;
+          });
+        });
+        console.log(JSON.stringify(this.matchesByStage));
         this.error = undefined;
       })
       .catch((error) => {
@@ -61,5 +73,9 @@ export default class KoStageOverview extends LightningElement {
     const stageWidth =
       this.template.querySelector(".stage-container").offsetWidth;
     container.scrollBy({ left: stageWidth, behavior: "smooth" });
+  }
+
+  getFlagUrl(flagCode) {
+    return TEAM_FLAGS + "/flags/" + flagCode + ".png";
   }
 }
